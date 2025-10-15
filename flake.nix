@@ -21,6 +21,7 @@
         pkgs = import nixpkgs {
           inherit system;
         };
+        pkgs-i686 = nixpkgs-i686.legacyPackages.i686-linux;
         vmImage = nixos-generators.nixosGenerate {
           #system = "i686-linux";
           pkgs = nixpkgs-i686.legacyPackages.i686-linux;
@@ -34,6 +35,15 @@
 
                 # Don't append "Installer" to grub menu entries. We're not an installer iso.
                 isoImage.appendToMenuLabel = "";
+
+                environment.systemPackages = [
+                  pkgs-i686.vim
+                  pkgs-i686.nano
+                  nixpkgs.legacyPackages.i686-linux.msedit
+                ];
+                programs = {
+                  git.enable = true;
+                };
             })
           ];
           # Currently failing to generate a hard drive raw image:
