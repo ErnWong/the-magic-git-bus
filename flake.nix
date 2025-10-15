@@ -11,6 +11,7 @@
     # supported and cached the i686 builds.
     nixpkgs-i686.url = "github:NixOS/nixpkgs/23.05";
     nixos-generators = {
+      #url = "github:nix-community/nixos-generators";
       url = "github:nix-community/nixos-generators/1.8.0";
       inputs.nixpkgs.follows = "nixpkgs-i686";
     };
@@ -33,11 +34,12 @@
                 users.users.root.initialHashedPassword = "";
             })
           ];
-          # Currently failing to generate a hard drive raw image:
-          #format = "raw"; # can't open fsimg nixos.raw: Value too large for defined data type
-          # Not quite applicable but similar: https://github.com/NixOS/nixpkgs/pull/82718
-          # So instead we generate a live iso which seems to work.
-          format = "iso";
+          specialArgs = {
+            #diskSize = 512 * 1024 * 1024;
+            diskSize = 3267021312;
+          };
+          #diskSize = 3267021312;
+          format = "raw";
         };
         vmState = pkgs.stdenv.mkDerivation {
 
