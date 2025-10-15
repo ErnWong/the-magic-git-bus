@@ -30,8 +30,8 @@
                 system.stateVersion = "23.05";
                 imports = [ "${modulesPath}/profiles/minimal.nix" ];
 
-                # Allow logging in without password.
-                users.users.root.initialHashedPassword = "";
+                # Automatically log in at the virtual consoles.
+                services.getty.autologinUser = "root";
 
                 # Don't append "Installer" to grub menu entries. We're not an installer iso.
                 isoImage.appendToMenuLabel = "";
