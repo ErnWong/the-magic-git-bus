@@ -31,6 +31,9 @@
 
                 # Allow logging in without password.
                 users.users.root.initialHashedPassword = "";
+
+                # Don't append "Installer" to grub menu entries. We're not an installer iso.
+                isoImage.appendToMenuLabel = "";
             })
           ];
           # Currently failing to generate a hard drive raw image:
