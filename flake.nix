@@ -28,6 +28,9 @@
             ({ lib, modulesPath, ... }: {
                 system.stateVersion = "23.05";
                 imports = [ "${modulesPath}/profiles/minimal.nix" ];
+
+                # Allow logging in without password.
+                users.users.root.initialHashedPassword = "";
             })
           ];
           # Currently failing to generate a hard drive raw image:
