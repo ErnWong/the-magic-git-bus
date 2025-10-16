@@ -1,5 +1,5 @@
 {
-  description = "Depths of git: an interactive tour to how git works under the hood";
+  description = "The magic git bus: an interactive tour to how git works under the hood";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     utils.url = "github:numtide/flake-utils";
