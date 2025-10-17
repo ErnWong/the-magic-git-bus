@@ -11,7 +11,11 @@
     # supported and cached the i686 builds.
     nixpkgs-i686.url = "github:NixOS/nixpkgs/23.05";
     nixos-generators = {
-      url = "github:nix-community/nixos-generators/1.8.0";
+      #url = "github:nix-community/nixos-generators/1.8.0";
+
+      # Need fix for extraFormat being a function, but old enough to support i686 nixpkgs
+      url = "github:nix-community/nixos-generators/bef32a05496d9480b02be586fa7827748b9e597b";
+      #url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs-i686";
     };
   };
@@ -23,7 +27,7 @@
         };
         pkgs-i686 = nixpkgs-i686.legacyPackages.i686-linux;
         vmImage = nixos-generators.nixosGenerate {
-          #system = "i686-linux";
+          system = "i686-linux";
           pkgs = nixpkgs-i686.legacyPackages.i686-linux;
           modules = [
             ({ lib, modulesPath, ... }: {
@@ -34,7 +38,8 @@
                 services.getty.autologinUser = "root";
 
                 # Don't append "Installer" to grub menu entries. We're not an installer iso.
-                isoImage.appendToMenuLabel = "";
+                #isoImage.appendToMenuLabel = "";
+
 
                 environment.systemPackages = [
                   (pkgs-i686.vim-full.customize {
@@ -56,7 +61,31 @@
           #format = "raw"; # can't open fsimg nixos.raw: Value too large for defined data type
           # Not quite applicable but similar: https://github.com/NixOS/nixpkgs/pull/82718
           # So instead we generate a live iso which seems to work.
-          format = "iso";
+          #format = "iso";
+                # TODO  https://github.com/nix-community/nixos-generators/issues/56#issuecomment-1592263891
+          customFormats = {
+            sd-minimal = { lib, config, modulesPath, ... }: {
+              imports = [
+                "${toString modulesPath}/installer/sd-card/sd-image.nix"
+              ];
+
+              boot.loader = {
+                grub.enable = false;
+                generic-extlinux-compatible.enable = true;
+              };
+
+              #boot.consoleLogLevel = lib.mkDefault 7;
+
+              sdImage.populateFirmwareCommands = "";
+              sdImage.populateRootCommands = ''
+                mkdir -p ./files/boot
+                ${config.boot.loader.generic-extlinux-compatible.populateCmd} -c ${config.system.build.toplevel} -d ./files/boot
+              '';
+              sdImage.compressImage = false; # TODO
+              formatAttr = "sdImage";
+            };
+          };
+          format = "sd-minimal";
         };
         vmState = pkgs.stdenv.mkDerivation {
 
