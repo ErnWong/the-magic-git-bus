@@ -45,6 +45,10 @@
                     };
                   })
                   pkgs-i686.nano
+                  ((pkgs-i686.emacsPackagesFor pkgs-i686.emacs).emacsWithPackages (
+                    epkgs: [epkgs.magit]
+                  ))
+
                   nixpkgs.legacyPackages.i686-linux.msedit
                 ];
                 programs = {
