@@ -37,7 +37,13 @@
                 isoImage.appendToMenuLabel = "";
 
                 environment.systemPackages = [
-                  pkgs-i686.vim
+                  (pkgs-i686.vim-full.customize {
+                    vimrcConfig.packages.myVimPackage = {
+                      start = [
+                        pkgs-i686.vimPlugins.fugitive
+                      ];
+                    };
+                  })
                   pkgs-i686.nano
                   nixpkgs.legacyPackages.i686-linux.msedit
                 ];
