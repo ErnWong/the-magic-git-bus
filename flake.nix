@@ -41,8 +41,40 @@
                     vimrcConfig.packages.myVimPackage = {
                       start = [
                         pkgs-i686.vimPlugins.fugitive
+                        pkgs-i686.vimPlugins.rhubarb
+                        pkgs-i686.vimPlugins.vim-gitgutter
+                        pkgs-i686.vimPlugins.gruvbox
+                        pkgs-i686.vimPlugins.vim-airline
+                        pkgs-i686.vimPlugins.vim-airline-themes
                       ];
                     };
+                    vimrcConfig.customRC = ''
+                      inoremap jk <esc>
+                      nnoremap <space> :
+                      vnoremap <space> :
+                      nnoremap <C-c> :BD<cr>
+                      nnoremap <C-w>h :wincmd v<cr>
+                      nnoremap <C-w>j :wincmd s<cr>:wincmd k<cr>
+                      nnoremap <C-w>k :wincmd s<cr>
+                      nnoremap <C-w>l :wincmd v<cr>:wincmd l<cr>
+
+                      set nobackup
+                      set nowritebackup
+
+                      let g:gruvbox_italic = 1
+                      let g:gruvbox_bold = 1
+                      colorscheme gruvbox
+                      set background=dark
+                      set termguicolors
+                      syntax on
+
+                      let g:airline_theme='gruvbox'
+                      let g:airline#extensions#tabline#enabled = 1
+                      let g:airline#extensions#tabline#left_sep = '''
+                      let g:airline#extensions#tabline#left_alt_sep = '│'
+
+                      set mouse=a
+                    '';
                   })
                   pkgs-i686.nano
                   ((pkgs-i686.emacsPackagesFor pkgs-i686.emacs).emacsWithPackages (
