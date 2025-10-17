@@ -30,6 +30,9 @@
                 system.stateVersion = "23.05";
                 imports = [ "${modulesPath}/profiles/minimal.nix" ];
 
+                # Always use serial port
+                boot.kernelParams = [ "console=ttyS0,115200n8" ];
+
                 # Automatically log in at the virtual consoles.
                 services.getty.autologinUser = "root";
 
@@ -50,6 +53,7 @@
                       ];
                     };
                     vimrcConfig.customRC = ''
+                      set nocompatible
                       inoremap jk <esc>
                       nnoremap <space> :
                       vnoremap <space> :
@@ -77,6 +81,13 @@
                       let g:airline#extensions#tabline#enabled = 1
                       let g:airline#extensions#tabline#left_sep = '''
                       let g:airline#extensions#tabline#left_alt_sep = '│'
+
+                      set cusorline
+                      set number
+                      set numberwidth=4
+                      set signcolum=number
+                      set laststatus=2
+                      set noshowmode
 
                       set mouse=a
                     '';
