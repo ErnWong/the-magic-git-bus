@@ -43,6 +43,7 @@
                         pkgs-i686.vimPlugins.fugitive
                         pkgs-i686.vimPlugins.rhubarb
                         pkgs-i686.vimPlugins.vim-gitgutter
+                        pkgs-i686.vimPlugins.vim-bufkill
                         pkgs-i686.vimPlugins.gruvbox
                         pkgs-i686.vimPlugins.vim-airline
                         pkgs-i686.vimPlugins.vim-airline-themes
