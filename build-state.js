@@ -3,7 +3,7 @@
 // Based on https://github.com/copy/v86/blob/9735a0eed83a426b3b14cf98f9043a5a9241b142/tools/docker/alpine/build-state.js
 
 import path from "node:path";
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import url from "node:url";
 import { V86 } from "./build/libv86.mjs";
 
@@ -26,7 +26,9 @@ console.log("Now booting, please stand by ...");
 let serial_text = "";
 let booted = false;
 
-emulator.add_listener("serial0-output-byte", function(byte)
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+emulator.add_listener("serial0-output-byte", async function(byte)
 {
     const c = String.fromCharCode(byte);
     //process.stdout.write(c);
@@ -39,16 +41,13 @@ emulator.add_listener("serial0-output-byte", function(byte)
 
         emulator.serial0_send("sync;echo 3 >/proc/sys/vm/drop_caches\n");
 
-        setTimeout(async function ()
-            {
-                const s = await emulator.save_state();
+        await delay(10 * 1000);
 
-                fs.writeFile(OUTPUT_FILE, new Uint8Array(s), function(e)
-                    {
-                        if(e) throw e;
-                        console.log("Saved as " + OUTPUT_FILE);
-                        emulator.destroy();
-                    });
-            }, 10 * 1000);
+        const s = await emulator.save_state();
+
+        await fs.writeFile(OUTPUT_FILE, new Uint8Array(s));
+        console.log("Saved as " + OUTPUT_FILE);
+
+        emulator.destroy();
     }
 });
