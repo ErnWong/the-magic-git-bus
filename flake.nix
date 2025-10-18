@@ -110,7 +110,8 @@
           # So instead we generate a live iso which seems to work.
           format = "iso";
         };
-        v86Libs = v86.defaultPackage.${system};
+        libv86 = v86.packages.${system}.libv86;
+        bios = v86.packages.${system}.seabios;
         vmStates = rec {
           loggedInState = pkgs.stdenv.mkDerivation {
             name = "the-magic-git-bus-login-state";
@@ -128,11 +129,10 @@
               patchShebangs --build build-state-0-login.js
             '';
             buildPhase = ''
-              ln -s "${v86Libs}" v86
-              mkdir -p bios
-              ln -s ${pkgs.seabios-qemu}/share/seabios/bios.bin ./bios/seabios.bin
+              ln -s "${libv86}" v86
+              ln -s "${bios}" bios
               mkdir -p images
-              ln -s ${vmImage}/iso/nixos.iso ./images
+              ln -s "${vmImage}/iso/nixos.iso" ./images
               ls -la
               ls -la v86
               ls -la bios
@@ -159,9 +159,8 @@
               patchShebangs --build build-state-1-git.js
             '';
             buildPhase = ''
-              ln -s "${v86Libs}" v86
-              mkdir -p bios
-              ln -s ${pkgs.seabios-qemu}/share/seabios/bios.bin ./bios/seabios.bin
+              ln -s "${libv86}" v86
+              ln -s "${bios}" bios
               mkdir -p images
               ln -s ${vmImage}/iso/nixos.iso ./images
               ln -s ${loggedInState}/0-login.bin ./images

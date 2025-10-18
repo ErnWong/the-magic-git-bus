@@ -111,6 +111,23 @@
         "type": "github"
       }
     },
+    "seabios-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1675300479,
+        "narHash": "sha256-J2FuT+FXn9YoFLSfxDOxyKZvKrys59a6bP1eYvEXVNU=",
+        "owner": "coreboot",
+        "repo": "seabios",
+        "rev": "ea1b7a0733906b8425d948ae94fba63c32b1d425",
+        "type": "github"
+      },
+      "original": {
+        "owner": "coreboot",
+        "ref": "rel-1.16.2",
+        "repo": "seabios",
+        "type": "github"
+      }
+    },
     "systems": {
       "locked": {
         "lastModified": 1681028828,
@@ -184,15 +201,16 @@
           "nixpkgs"
         ],
         "rust-overlay": "rust-overlay",
+        "seabios-src": "seabios-src",
         "utils": "utils_2",
         "v86-src": "v86-src"
       },
       "locked": {
-        "lastModified": 1760262610,
-        "narHash": "sha256-kdw8FRH+47SNbVkcNEpa2y+Kxqhzs7brFKlI3iSGQ7k=",
+        "lastModified": 1760829352,
+        "narHash": "sha256-ilx34+IJ+nOAVxgSCETQM/KKDEarBs8+iUOfwcZh014=",
         "owner": "ErnWong",
         "repo": "v86-nix",
-        "rev": "12367ef9e27b0e8227c9d0cf7b9fc504218f0735",
+        "rev": "4552975d1e4c8b86f97ea8ce99aec2f5506f368e",
         "type": "github"
       },
       "original": {
