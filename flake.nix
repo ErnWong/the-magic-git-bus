@@ -110,8 +110,68 @@
           # So instead we generate a live iso which seems to work.
           format = "iso";
         };
-        vmState = pkgs.stdenv.mkDerivation {
-
+        v86Libs = v86.defaultPackage.${system};
+        vmStates = rec {
+          loggedInState = pkgs.stdenv.mkDerivation {
+            name = "the-magic-git-bus-login-state";
+            nativeBuildInputs = [
+              pkgs.nodejs_24
+            ];
+            src = nixpkgs.lib.fileset.toSource {
+              root = ./.;
+              fileset = nixpkgs.lib.fileset.unions [
+                ./build-state-0-login.js
+                ./state-builder.js
+              ];
+            };
+            postPatch = ''
+              patchShebangs --build build-state-0-login.js
+            '';
+            buildPhase = ''
+              ln -s "${v86Libs}" v86
+              mkdir -p bios
+              ln -s ${pkgs.seabios-qemu}/share/seabios/bios.bin ./bios/seabios.bin
+              mkdir -p images
+              ln -s ${vmImage}/iso/nixos.iso ./images
+              ls -la
+              ls -la v86
+              ls -la bios
+              ./build-state-0-login.js
+            '';
+            installPhase = ''
+              mkdir -p "$out"
+              cp images/0-login.bin "$out"
+            '';
+          };
+          gitStates = pkgs.stdenv.mkDerivation {
+            name = "the-magic-git-bus-git-states";
+            nativeBuildInputs = [
+              pkgs.nodejs_24
+            ];
+            src = nixpkgs.lib.fileset.toSource {
+              root = ./.;
+              fileset = nixpkgs.lib.fileset.unions [
+                ./build-state-1-git.js
+                ./state-builder.js
+              ];
+            };
+            postPatch = ''
+              patchShebangs --build build-state-1-git.js
+            '';
+            buildPhase = ''
+              ln -s "${v86Libs}" v86
+              mkdir -p bios
+              ln -s ${pkgs.seabios-qemu}/share/seabios/bios.bin ./bios/seabios.bin
+              mkdir -p images
+              ln -s ${vmImage}/iso/nixos.iso ./images
+              ln -s ${loggedInState}/0-login.bin ./images
+              ./build-state-1-git.js
+            '';
+            installPhase = ''
+              mkdir -p "$out"
+              cp images/1-git-init.bin "$out"
+            '';
+          };
         };
         depthsOfGit = pkgs.stdenv.mkDerivation {
           name = "depthsofgit";
@@ -119,7 +179,7 @@
       in
       {
         packages = {
-          inherit vmImage vmState depthsOfGit;
+          inherit vmImage vmStates depthsOfGit;
         };
         defaultPackage = depthsOfGit;
       }
