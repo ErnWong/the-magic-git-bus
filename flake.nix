@@ -33,6 +33,8 @@
                 # Always use serial port
                 boot.kernelParams = [ "console=ttyS0,115200n8" ];
 
+                networking.hostName = "gitbus";
+
                 # Automatically log in at the virtual consoles.
                 services.getty.autologinUser = "root";
 
@@ -97,7 +99,15 @@
                     epkgs: [epkgs.magit]
                   ))
 
+                  # msedit is new and didn't exist in the older nixpkgs version
                   nixpkgs.legacyPackages.i686-linux.msedit
+
+                  # In case the user gets curious
+                  pkgs-i686.neofetch
+                  nixpkgs.legacyPackages.i686-linux.fastfetch
+                  pkgs-i686.hyfetch
+                  pkgs-i686.sl
+                  pkgs-i686.cowsay
                 ];
                 programs = {
                   git.enable = true;

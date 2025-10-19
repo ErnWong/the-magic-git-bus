@@ -1,7 +1,8 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import url from "node:url";
-import { V86 } from "./v86/libv86.mjs";
+//import { V86 } from "./v86/libv86.mjs";
+import { V86 } from "./v86/libv86-debug.mjs";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -13,13 +14,14 @@ export default function buildState({ initialState, script })
     var emulator = new V86({
         wasm_path: "./v86/v86.wasm",
         bios: { url: path.join(V86_ROOT, "bios/seabios.bin") },
-        //vga_bios: { url: path.join(V86_ROOT, "bios/vgabios.bin") },
+        vga_bios: { url: path.join(V86_ROOT, "bios/vgabios.bin") },
         autostart: true,
         memory_size: 512 * 1024 * 1024,
         vga_memory_size: 8 * 1024 * 1024,
-        network_relay_url: "<NONE>", // If i give this <None> it errors with invalid URL, but I reach login state. If I make this empty string, I don't get type error about invalid url, but I get stuck in logging in to root?
         cdrom: { url: path.join(IMAGES_DIR, "nixos.iso") },
-        initialState: initialState ? { url: path.join(IMAGES_DIR, initialState) } : undefined,
+        initial_state: initialState ? { url: path.join(IMAGES_DIR, initialState) } : undefined,
+        //log_level: 0x004000, // LOG_SERIAL // 0, // LOG_NONE
+        log_level: 0, // LOG_NONE
     });
 
     console.log("Now booting, please stand by ...");
@@ -35,6 +37,28 @@ export default function buildState({ initialState, script })
         }
     }
 
+    function* waitUntilPrompt()
+    {
+        // We can't search the whole text since there will be ANSI escape characters
+        // yield* waitUntilNewTextEndsWith("[root@gitbus:~]#");
+        // So instead, search the text within:
+        /*
+        Note:
+            [root@nixos:~]# echo $PS1
+            \n\[\033[1;31m\][\[\e]0;\u@\h: \w\a\]\u@\h:\w]\$\[\033[0m\]
+        */
+        yield* waitUntilNewTextEndsWith("root");
+        yield* waitUntilNewTextEndsWith("@");
+        yield* waitUntilNewTextEndsWith("gitbus");
+        yield* waitUntilNewTextEndsWith("#");
+    }
+
+    function* run(cmd)
+    {
+        emulator.serial0_send(cmd + '\n');
+        yield* waitUntilPrompt();
+    }
+
     async function save(filename)
     {
         emulator.serial0_send("sync;echo 3 >/proc/sys/vm/drop_caches\n");
@@ -45,7 +69,14 @@ export default function buildState({ initialState, script })
         console.log("Saved as " + output_file);
     }
 
-    const script_state = script({ emulator, delay, waitUntilNewTextEndsWith, save });
+    const script_state = script({
+        emulator,
+        delay,
+        waitUntilNewTextEndsWith,
+        waitUntilPrompt,
+        run,
+        save,
+    });
     // Run until the first yield so it can accept the first serial byte.
     script_state.next();
 

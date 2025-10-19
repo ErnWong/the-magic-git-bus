@@ -3,7 +3,7 @@
 import buildState from "./state-builder.js";
 
 buildState({
-    script: async function*({ emulator, delay, waitUntilNewTextEndsWith, save })
+    script: async function*({ emulator, delay, waitUntilNewTextEndsWith, waitUntilPrompt, run, save })
     {
         // Wait for boot menu
         await delay(4000);
@@ -14,7 +14,9 @@ buildState({
         const down_key = `${escape}B`;
         emulator.serial0_send(`${down_key}${down_key}${down_key}${down_key}\n`);
 
-        yield* waitUntilNewTextEndsWith("[root@nixos:~]#");
+        yield* waitUntilNewTextEndsWith("(automatic login)");
+        yield* waitUntilPrompt();
+        yield* run("clear");
         await save("0-login.bin");
     }
 });
