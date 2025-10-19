@@ -23,7 +23,6 @@
         };
         pkgs-i686 = nixpkgs-i686.legacyPackages.i686-linux;
         vmImage = nixos-generators.nixosGenerate {
-          #system = "i686-linux";
           pkgs = nixpkgs-i686.legacyPackages.i686-linux;
           modules = [
             ({ lib, modulesPath, ... }: {

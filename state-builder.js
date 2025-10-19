@@ -1,8 +1,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import url from "node:url";
-//import { V86 } from "./v86/libv86.mjs";
-import { V86 } from "./v86/libv86-debug.mjs";
+import { V86 } from "./v86/libv86.mjs";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -21,7 +20,6 @@ export default function buildState({ initialState, script })
         cdrom: { url: path.join(IMAGES_DIR, "nixos.iso") },
         initial_state: initialState ? { url: path.join(IMAGES_DIR, initialState) } : undefined,
         filesystem: {}, // Empty 9p filesystem
-        //log_level: 0x004000, // LOG_SERIAL // 0, // LOG_NONE
         log_level: 0, // LOG_NONE
     });
 
