@@ -20,6 +20,7 @@ export default function buildState({ initialState, script })
         vga_memory_size: 8 * 1024 * 1024,
         cdrom: { url: path.join(IMAGES_DIR, "nixos.iso") },
         initial_state: initialState ? { url: path.join(IMAGES_DIR, initialState) } : undefined,
+        filesystem: {}, // Empty 9p filesystem
         //log_level: 0x004000, // LOG_SERIAL // 0, // LOG_NONE
         log_level: 0, // LOG_NONE
     });

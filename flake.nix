@@ -143,9 +143,6 @@
               ln -s "${bios}" bios
               mkdir -p images
               ln -s "${vmImage}/iso/nixos.iso" ./images
-              ls -la
-              ls -la v86
-              ls -la bios
               ./build-state-0-login.js
             '';
             installPhase = ''
