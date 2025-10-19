@@ -178,15 +178,15 @@
             '';
           };
         };
-        depthsOfGit = pkgs.stdenv.mkDerivation {
-          name = "depthsofgit";
+        theMagicGitBus = pkgs.stdenv.mkDerivation {
+          name = "theMagicGitBus";
         };
       in
       {
         packages = {
-          inherit vmImage vmStates depthsOfGit;
+          inherit vmImage vmStates theMagicGitBus;
         };
-        defaultPackage = depthsOfGit;
+        defaultPackage = theMagicGitBus;
       }
     );
 }
