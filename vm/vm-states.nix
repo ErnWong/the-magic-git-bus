@@ -57,6 +57,8 @@
         installPhase = ''
           mkdir -p "$out"
           cp images/1-git-init.bin "$out"
+          cp images/2-git-blobs.bin "$out"
+          cp images/3-git-trees.bin "$out"
         '';
       };
     }
