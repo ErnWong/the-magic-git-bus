@@ -107,6 +107,9 @@
                   pkgs-i686.hyfetch
                   pkgs-i686.sl
                   pkgs-i686.cowsay
+
+                  # Important for the git tutorial
+                  pkgs-i686.pigz # For compressing objects into zlib stream
                 ];
                 programs = {
                   git.enable = true;
