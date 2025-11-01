@@ -211,15 +211,38 @@ Since it's the first commit, there won't be any parent.
 
 ```bash
 echo tree 6db497f8ca5a8bf50591fd13beb12fc66dff1d31 > mycommit.txt
-echo "author Waylon Smithers <mr@smithers.invalid> 1762902000 + 1300" >> mycommit.txt
-echo "committer Charles Montgomery Plantagenet Schicklgruber Burns <mr@burns.invalid> 1762902000 + 1300" >> mycommit.txt
+echo "author Waylon Smithers <mr@smithers.invalid> 1762902000 +1300" >> mycommit.txt
+echo "committer Charles Montgomery Plantagenet Schicklgruber Burns <mr@burns.invalid> 1762902000 +1300" >> mycommit.txt
 echo "" >> mycommit.txt
 echo "My first commit" >> mycommit.txt
 git hash-object -t commit -w mycommit.txt
-# 
+# 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b
 
-git show 
+git show 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b
 ```
 
+There's a handy command to do that: `git commit-tree`.
 
-`git commit-tree`
+Say we want to create a new commit where we modify `fodler/copy.txt`
+
+We will use `git mktree` this time too.
+
+```bash
+echo modifed | git hash-object -w
+# 2e0996000b7e9019eabcad29391bf0f5c7702f0b
+
+echo -e "100644 blob 2e0996000b7e9019eabcad29391bf0f5c7702f0b\tcopy.txt" | git mktree
+# 974cd135eb6c4da9d3f14e1de564f76a8a07234e
+
+echo -e "040000 tree 974cd135eb6c4da9d3f14e1de564f76a8a07234e\tfolder
+100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad\tmyfile.txt
+100644 blob 323fae03f4606ea9991df8befbb2fca795e648fa\totherfile.txt" | git mktree
+# 486a17fba0168a9242e39931c2b0233ada6a9671
+
+GIT_AUTHOR_DATE="2025-11-12T12:00:00+13" GIT_COMMIT_DATE="2025-11-12T12:00:00+13" git commit-tree -p 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b -m "Second commit!" 486a17fba0168a9242e39931c2b0233ada6a9671
+# fb3b888b18770f0b52a441bb0f9d0e89b606f60a
+
+git log fb3b888b18770f0b52a441bb0f9d0e89b606f60a
+
+git show fb3b888b18770f0b52a441bb0f9d0e89b606f60a
+```
