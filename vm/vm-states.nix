@@ -10,21 +10,22 @@
           pkgs.nodejs_24
         ];
         src = nixpkgs.lib.fileset.toSource {
-          root = ./.;
+          root = ./..;
           fileset = nixpkgs.lib.fileset.unions [
             ./build-state-0-login.js
             ./state-builder.js
+            ../config
           ];
         };
         postPatch = ''
-          patchShebangs --build build-state-0-login.js
+          patchShebangs --build ./vm/build-state-0-login.js
         '';
         buildPhase = ''
           ln -s "${libv86}" v86
           ln -s "${bios}" bios
           mkdir -p images
           ln -s "${vmImage}/iso/nixos.iso" ./images
-          ./build-state-0-login.js
+          ./vm/build-state-0-login.js
         '';
         installPhase = ''
           mkdir -p "$out"
@@ -37,14 +38,15 @@
           pkgs.nodejs_24
         ];
         src = nixpkgs.lib.fileset.toSource {
-          root = ./.;
+          root = ./..;
           fileset = nixpkgs.lib.fileset.unions [
             ./build-state-1-git.js
             ./state-builder.js
+            ../config
           ];
         };
         postPatch = ''
-          patchShebangs --build build-state-1-git.js
+          patchShebangs --build ./vm/build-state-1-git.js
         '';
         buildPhase = ''
           ln -s "${libv86}" v86
@@ -52,7 +54,7 @@
           mkdir -p images
           ln -s ${vmImage}/iso/nixos.iso ./images
           ln -s ${loggedInState}/0-login.bin ./images
-          ./build-state-1-git.js
+          ./vm/build-state-1-git.js
         '';
         installPhase = ''
           mkdir -p "$out"

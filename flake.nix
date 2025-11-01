@@ -27,15 +27,15 @@
         vmStates = import ./vm/vm-states.nix {
           inherit system pkgs nixpkgs v86 vmImage;
         };
-        theMagicGitBus = pkgs.stdenv.mkDerivation {
-          name = "theMagicGitBus";
+        server = import ./server/default.nix {
+          inherit system pkgs nixpkgs v86 vmImage vmStates;
         };
       in
       {
         packages = {
-          inherit vmImage vmStates theMagicGitBus;
+          inherit vmImage vmStates server;
         };
-        defaultPackage = theMagicGitBus;
+        defaultPackage = server;
       }
     );
 }

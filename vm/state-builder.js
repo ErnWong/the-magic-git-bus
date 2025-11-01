@@ -1,26 +1,16 @@
 import path from "node:path";
 import fs from "node:fs/promises";
-import url from "node:url";
-import { V86 } from "./v86/libv86.mjs";
 
-const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+import { V86 } from "../v86/libv86.mjs";
 
-const V86_ROOT = path.join(__dirname, "./");
-const IMAGES_DIR = path.join(V86_ROOT, "images");
+import { IMAGES_DIR, toV86Url } from "../config/paths.js";
+import vmConfig from '../config/vm.js';
 
 export default function buildState({ initialState, script })
 {
     var emulator = new V86({
-        wasm_path: "./v86/v86.wasm",
-        bios: { url: path.join(V86_ROOT, "bios/seabios.bin") },
-        vga_bios: { url: path.join(V86_ROOT, "bios/vgabios.bin") },
-        autostart: true,
-        memory_size: 512 * 1024 * 1024,
-        vga_memory_size: 8 * 1024 * 1024,
-        cdrom: { url: path.join(IMAGES_DIR, "nixos.iso") },
-        initial_state: initialState ? { url: path.join(IMAGES_DIR, initialState) } : undefined,
-        filesystem: {}, // Empty 9p filesystem
-        log_level: 0, // LOG_NONE
+        ...vmConfig,
+        initial_state: initialState ? { url: toV86Url(new URL(initialState, IMAGES_DIR)) } : undefined,
     });
 
     console.log("Now booting, please stand by ...");
@@ -63,7 +53,7 @@ export default function buildState({ initialState, script })
         emulator.serial0_send("sync;echo 3 >/proc/sys/vm/drop_caches\n");
         await delay(10 * 1000);
         const s = await emulator.save_state();
-        const output_file = path.join(IMAGES_DIR, filename);
+        const output_file = new URL(filename, IMAGES_DIR);
         await fs.writeFile(output_file, new Uint8Array(s));
         console.log("Saved as " + output_file);
     }
