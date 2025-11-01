@@ -1,6 +1,5 @@
 import { IMAGES_DIR, BIOS_DIR, toV86Url } from "./paths.js";
 
-console.log('biosdir', BIOS_DIR);
 export default {
     wasm_path: "./v86/v86.wasm",
     bios: { url: toV86Url(new URL("seabios.bin", BIOS_DIR)) },
