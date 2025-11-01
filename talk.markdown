@@ -63,7 +63,13 @@ How the codebase looks at the moment in time - how do we describe that? Well, fi
 
 Let's call a thing - an object.
 
-As you imagine, a project has many things, so we will have many objects. Let's have a folder to store them.
+# Objects
+
+Reference: https://git-scm.com/book/en/v2/Git-Internals-Git-Objects
+
+As you imagine, a project has many things, so we will have many objects. Let's have a folder to store them: `.git/objects`
+
+## Blobs
 
 Let's look at the first kind of thing - the blob. You can imagine, if we a file whos contents we want to store in a version control system, we'd have an object representing that file's data. We call that a blob.
 
@@ -97,7 +103,7 @@ git hash-object -t blob myfile.txt
 # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad
 ```
 
-But how come that's not the hash we get?
+How does git calculate the hash? We can try calculating the sha1 sum directly, but how come that's not the hash we get?
 
 ``` bash
 cat myfile.txt | shasum
@@ -105,6 +111,8 @@ cat myfile.txt | shasum
 ```
 
 The actual blob file will need a bit of metadata - specifically the type of object (in this case 'blob') and the number of bytes of contents (in this case 12, including the trailing new line), finally with a null character.
+
+[TODO DIAGRAM OF BLOB STRUCTURE]
 
 ```bash
 echo -e "blob 12\0hello world" > myblob
@@ -149,9 +157,13 @@ find .git/objects -type f
 
 Nice, so we can store the contents of individual files. What about filenames and directories? For that, we turn to trees.
 
+## Trees
+
 What is a directory, if not just a list of child filenames and child folder names and their associated ids?
 
 Specifically, each list entry is `[file mode] [filename with null terminator] [sha1bytes]`. Note we have to turn our hash string into bytes first, which we can do using `xxd -r -p`.
+
+[TODO DIAGRAM OF BLOB STRUCTURE]
 
 ```bash
 echo -e -n "100644 copy.txt\0" > childtree
@@ -182,3 +194,32 @@ git ls-tree -r 6db497f8ca5a8bf50591fd13beb12fc66dff1d31
 # 100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad    myfile.txt
 # 100644 blob 323fae03f4606ea9991df8befbb2fca795e648fa    otherfile.txt
 ```
+
+There's similarly a `git mktree` command that makes this easier - taking in the format of `ls-tree` without having to add null bytes or convert the sha to bytes.
+
+## Commits
+
+If we can then create a tree that describes the snapshot of the entire codebase at a particular point in time, we can then use that to describe a commit. Just the tree isn't enough though - we'd like to attach some metadata to the tree, like who made this commit, when was it made, and a description of what this commit is about.
+
+The contents of a commit object is actually very readable and easy to write as it's all just in ASCII this time.
+
+[TODO DIAGRAM]
+
+Let's create a commit using the root tree object we created last time (6db497f8ca5a8bf50591fd13beb12fc66dff1d31).
+
+Since it's the first commit, there won't be any parent.
+
+```bash
+echo tree 6db497f8ca5a8bf50591fd13beb12fc66dff1d31 > mycommit.txt
+echo "author Waylon Smithers <mr@smithers.invalid> 1762902000 + 1300" >> mycommit.txt
+echo "committer Charles Montgomery Plantagenet Schicklgruber Burns <mr@burns.invalid> 1762902000 + 1300" >> mycommit.txt
+echo "" >> mycommit.txt
+echo "My first commit" >> mycommit.txt
+git hash-object -t commit -w mycommit.txt
+# 
+
+git show 
+```
+
+
+`git commit-tree`
