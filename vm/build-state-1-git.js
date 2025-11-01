@@ -65,6 +65,6 @@ buildState({
         yield* run('git --no-pager log 704cad9af4578d8f3248fe4c4e044014322f1154');
         yield* run('git --no-pager show 704cad9af4578d8f3248fe4c4e044014322f1154');
 
-        await save("4-git-commit.bin");
+        await save("4-git-commits.bin");
     }
 });
