@@ -30,6 +30,11 @@ const states = [
         downloading: true,
         postLoadCommand: 'clear\n',
     },
+    {
+        name: '4-git-commits',
+        downloading: true,
+        postLoadCommand: 'clear\n',
+    },
 ];
 let restoring_state = false;
 for(const state of states)
