@@ -223,12 +223,12 @@ git show 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b
 
 There's a handy command to do that: `git commit-tree`.
 
-Say we want to create a new commit where we modify `fodler/copy.txt`
+Say we want to create a new commit where we modify `folder/copy.txt`
 
 We will use `git mktree` this time too.
 
 ```bash
-echo modifed | git hash-object -w
+echo modified | git hash-object -w --stdin
 # 2e0996000b7e9019eabcad29391bf0f5c7702f0b
 
 echo -e "100644 blob 2e0996000b7e9019eabcad29391bf0f5c7702f0b\tcopy.txt" | git mktree
@@ -239,10 +239,10 @@ echo -e "040000 tree 974cd135eb6c4da9d3f14e1de564f76a8a07234e\tfolder
 100644 blob 323fae03f4606ea9991df8befbb2fca795e648fa\totherfile.txt" | git mktree
 # 486a17fba0168a9242e39931c2b0233ada6a9671
 
-GIT_AUTHOR_DATE="2025-11-12T12:00:00+13" GIT_COMMIT_DATE="2025-11-12T12:00:00+13" git commit-tree -p 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b -m "Second commit!" 486a17fba0168a9242e39931c2b0233ada6a9671
-# fb3b888b18770f0b52a441bb0f9d0e89b606f60a
+GIT_AUTHOR_DATE="2025-11-12T12:00:00+13" GIT_COMMITTER_DATE="2025-11-12T12:00:00+13" git commit-tree -p 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b -m "Second commit!" 486a17fba0168a9242e39931c2b0233ada6a9671
+# 704cad9af4578d8f3248fe4c4e044014322f1154
 
-git log fb3b888b18770f0b52a441bb0f9d0e89b606f60a
+git log 704cad9af4578d8f3248fe4c4e044014322f1154
 
-git show fb3b888b18770f0b52a441bb0f9d0e89b606f60a
+git show 704cad9af4578d8f3248fe4c4e044014322f1154
 ```

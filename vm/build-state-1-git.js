@@ -11,7 +11,7 @@ buildState({
         yield* run("mount -t 9p -o trans=virtio,version=9p2000.L host9p ~/repo");
         yield* run("cd repo && git init");
         yield* run("git config --global user.name 'Charles Montgomery Plantagenet Schicklgruber Burns'");
-        yield* run("git config --global user.email ''mr@burns.invalid");
+        yield* run("git config --global user.email 'mr@burns.invalid'");
         await save("1-git-init.bin");
 
         yield* run("git cat-file --batch-check --batch-all-objects"); // While this doesn't affect git state, run this anyway so it's available in bash history
@@ -54,16 +54,16 @@ buildState({
         yield* run('echo "" >> mycommit.txt');
         yield* run('echo "My first commit" >> mycommit.txt');
         yield* run('git hash-object -t commit -w mycommit.txt');
-        yield* run('git show 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b');
+        yield* run('git --no-pager show 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b');
 
-        yield* run('echo modifed | git hash-object -w');
-        yield* run('echo -e "100644 blob 2e0996000b7e9019eabcad29391bf0f5c7702f0b\tcopy.txt" | git mktree');
-        yield* run('echo -e "040000 tree 974cd135eb6c4da9d3f14e1de564f76a8a07234e\tfolder');
-        yield* run('100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad\tmyfile.txt');
-        yield* run('100644 blob 323fae03f4606ea9991df8befbb2fca795e648fa\totherfile.txt" | git mktree');
-        yield* run('GIT_AUTHOR_DATE="2025-11-12T12:00:00+13" GIT_COMMIT_DATE="2025-11-12T12:00:00+13" git commit-tree -p 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b -m "Second commit!" 486a17fba0168a9242e39931c2b0233ada6a9671');
-        yield* run('git log fb3b888b18770f0b52a441bb0f9d0e89b606f60a');
-        yield* run('git show fb3b888b18770f0b52a441bb0f9d0e89b606f60a');
+        yield* run('echo modified | git hash-object -w --stdin');
+        yield* run('echo -e "100644 blob 2e0996000b7e9019eabcad29391bf0f5c7702f0b\\tcopy.txt" | git mktree');
+        yield* run('echo -e "040000 tree 974cd135eb6c4da9d3f14e1de564f76a8a07234e\\tfolder');
+        yield* run('100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad\\tmyfile.txt');
+        yield* run('100644 blob 323fae03f4606ea9991df8befbb2fca795e648fa\\totherfile.txt" | git mktree');
+        yield* run('GIT_AUTHOR_DATE="2025-11-12T12:00:00+13" GIT_COMMITTER_DATE="2025-11-12T12:00:00+13" git commit-tree -p 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b -m "Second commit!" 486a17fba0168a9242e39931c2b0233ada6a9671');
+        yield* run('git --no-pager log 704cad9af4578d8f3248fe4c4e044014322f1154');
+        yield* run('git --no-pager show 704cad9af4578d8f3248fe4c4e044014322f1154');
 
         await save("4-git-commit.bin");
     }
