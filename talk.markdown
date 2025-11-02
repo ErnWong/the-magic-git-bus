@@ -246,3 +246,79 @@ git log 704cad9af4578d8f3248fe4c4e044014322f1154
 
 git show 704cad9af4578d8f3248fe4c4e044014322f1154
 ```
+
+# Index, the Staging Area
+
+# Refs
+
+As you may have noticed by now, having to keep track of all these object id hashes is quite a pain. Let's give them names that we can use to **ref**er back to the objects. Let's create some refs.
+
+## Tags (lightweight unannotated tags)
+
+How about we just chuck a file in `.git/refs/tags/*` vwith the name of the tag, and put the object id in the file contents.
+
+```bash
+echo 704cad9af4578d8f3248fe4c4e044014322f1154 > .git/refs/tags/mytag
+```
+
+Let's have a handy command to do this:
+
+```bash
+git update-ref refs/tags/mytag 704cad9
+```
+
+And now we can refer to that commit using our tag name:
+
+```bash
+git show mytag
+```
+
+But, as you imagine, it's still quite inconvenient. It's useful to know what's our latest and current commit that we are working on, and the idea of tags don't really fit in here if we want a way to refer to the latest commit that will change every time we make a new commit.
+
+## Heads (aka branches)
+
+Instead, let's create a new kind of ref, called a "head" - that represents what we are currently working on.
+
+```bash
+echo 704cad9af4578d8f3248fe4c4e044014322f1154 > .git/refs/heads/master
+
+git show master
+```
+
+There can be multiple commits where we are interested in working on and we'd like to keep track of, so we can create additional heads for them too, and we can call each "line of work" as a "branch" for each of the heads we have:
+
+```bash
+echo 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b > .git/refs/heads/story
+
+git show story
+```
+
+Then we can plonk a ***symbolic ref*** called `.git/HEAD` in all capitals that point to which head we are currently working on.
+
+```bash
+echo ref:refs/heads/master > .git/HEAD
+```
+
+and now we can just do
+
+```bash
+git show
+```
+
+And we can design our commands so that this kind of ref is automatically updated whenever we create a new commit while we're on a branch.
+
+```bash
+cat .git/refs/heads/master
+# 704cad9af4578d8f3248fe4c4e044014322f1154
+echo new-content > newfile.txt
+git add newfile.txt
+git commit -m "Third commit"
+cat .git/refs/heads/master
+# Note the hash changed
+```
+
+We have some convenience commands to handle these refs: `git update-ref` and `git symbolic-ref`. These also write to the reflogs: `.git/logs/HEAD` and `.git/logs/refs/*` so we can look back at the history in case we ever need to, using `git reflog`.
+
+# Merges
+
+Now, finally, we've got enough to start digging into the more interesting stuff.
