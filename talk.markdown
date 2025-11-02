@@ -249,6 +249,31 @@ git show 704cad9af4578d8f3248fe4c4e044014322f1154
 
 # Index, the Staging Area
 
+Now, how should we design the frontend commands to commit their files? Although Mecurial and Git are very similar, they diverge here in their approach: Mercurial commits directly what's in the working directory, while Git has a staging area. https://stackoverflow.com/questions/54805005/why-does-git-need-to-design-index-stage, and it appears to be a feature that was already there since the beginning of git in its first commit. https://about.gitlab.com/blog/journey-through-gits-20-year-history/
+
+The staging area is stored as the file `.git/index`. It is effectively a binary file that stores the relationship between filepaths and the corresponding blob object ids, plus some other metadata. The binary format is a bit tedious to write manually, so let's use `git update-index` to help us modify it instead.
+
+https://git-scm.com/docs/index-format
+
+```bash
+git update-index --add --cacheinfo 100644,2e0996000b7e9019eabcad29391bf0f5c7702f0b,my/path/to/file.txt
+```
+
+which is similar to what happens when you run `git add` on a file.
+
+After which, we can generate a new tree out of the index:
+
+```bash
+git write-tree
+# TODO resulting tree id
+
+git ls-tree -r TODOthattreeid
+```
+
+which is similar to what happens when you run `git commit` and it needs to generate the tree object for the commit.
+
+There's also `git read-tree` to read a tree into index.
+
 # Refs
 
 As you may have noticed by now, having to keep track of all these object id hashes is quite a pain. Let's give them names that we can use to **ref**er back to the objects. Let's create some refs.
@@ -321,4 +346,150 @@ We have some convenience commands to handle these refs: `git update-ref` and `gi
 
 # Merges
 
-Now, finally, we've got enough to start digging into the more interesting stuff.
+We've talked about objects, commits, and branches, let's talk about what happens when you have two branches and we want to merge one branch into another.
+
+## 3 way merge
+
+But how would we go about it? Say we have file we changed in two different ways and we now want to reconsolidate the two.
+
+We could directly diff the two: Wherever they match, we're good. But what do we do when they don't match? We don't really have any information from just the diff to know what the intent is and whether the mismatch is coming from one side only or whether it's coming from both sides, so we need some more information.
+
+More importantly, we want to compare both versions to a third version: the base, that both versions originate from, so we can tell which changes are introduced only from one side and we can safely merge in.
+
+This is where the 3-way diff comes in. From way back in 1979 Unix Version 7, there was a program called diff3 which provided this algorithm, and it was used in some VCSs at the time long before git.
+
+Git provides a plumbing command for merging a single file in a 3-way merge. You can give it a try:
+
+```bash
+echo "a
+
+b
+
+c" > base.txt
+echo "a1
+
+b1
+
+c" > current.txt
+echo "a
+
+b2
+
+c2" > other.txt
+
+diff3 --merge current.txt base.txt other.txt
+# a1
+# 
+# <<<<<<< current.txt
+# b1
+# ||||||| base.txt
+# b
+# =======
+# b2
+# >>>>>>> other.txt
+# 
+# c2
+
+git merge-file --stdout current.txt base.txt other.txt
+# a1
+# 
+# <<<<<<< current.txt
+# b1
+# =======
+# b2
+# >>>>>>> other.txt
+# 
+# c2
+```
+
+For merging the entire codebase tree rather than individual files, we have `git merge-tree`.
+
+```bash
+git checkout -b branch1
+echo Content from branch 1 > branch1.txt
+echo Conflict from branch 1 > conflict.txt
+git add branch1.txt conflict.txt
+git commit -m "Commit 1"
+
+git checkout -
+
+git checkout -b branch2
+echo Content from branch 2 > branch2.txt
+echo Conflict from branch 2 > conflict.txt
+git add branch2.txt conflict.txt
+git commit -m "Commit 2"
+
+git checkout -
+
+git merge-tree --write-tree --merge-base=master branch1 branch2
+```
+
+## Merge base
+
+A good merge-base would be the commit from which we find unmerged changes between branch1 and branch2, and that turns out to be the common ancestor. We can find this using:
+
+```bash
+git merge-base --all branch1 branch2
+```
+
+## Recursive merge and criss-cross merges
+
+But what happens when there are multiple candidates for the merge base? This might seem unintuitive but it can happen with e.g. criss-cross merges.
+
+```bash
+git checkout branch1
+git merge branch2
+git add conflict.txt
+git commit -m "Merge branch 2 into 1"
+
+git checkout branch2
+git merge branch1
+git add conflict.txt
+git commit -m "Merge branch 1 into 2"
+
+git merge-base --all branch1 branch2
+```
+
+How should we consolidate this? Well, we have two merge-bases but our 3-way merge only works with one merge-base: how about we just merge the two merge-bases together? And that's where the "recursive"ness of the "recursive" merge comes in. Git recursively merges the merge bases until we have one left. You can imagine that the merge-bases themselves can also have multiple merge-bases that needs consolidating, hence recursive.
+
+## Ort algorithm
+
+These days, instead of seeing the words "recursive algorithm" in the merge messages, you might come across the words "ORT algorithm" instead, which is a newer algorithm introduced in Git 2.33 in 2021 (Ostensibly Recursive’s Twin) and now the recursive algorithm option is a synonym of this ORT algorithm.
+
+Fun fact - it's a pun! To specify the merge algorithm, we use the -s flag for strategy, and so the command line becomes `git merge -s ort` ... get it?
+
+Anyhow, this new algorithm's main key points is it handles deletions and renames better.
+
+# Sequencer: The infrastructure around Rebases and other utilities
+
+
+
+## Cherry-pick
+
+```bash
+git merge-tree --merge-base=destination^ source destination
+```
+
+### Picking Merges - selecting parent
+
+## Revert
+
+```bash
+git merge-tree --merge-base=destination source destination^
+```
+
+## Squashing
+
+commit-tree
+
+# Bad merges - Pitfalls to avoid
+
+Before we know it, we've finally resurfaced back onto the coast of bad merges.
+
+Now that we have cherry-picks and merging at our disposal, there are some footguns we need to be careful with where the resulting behaviour is unintuitive and usually undesirable.
+
+Have you ever wondered why we have stricter rules around merging strategy between our long-lived branches? Have you wondered why there can be a bit of commotion when a mistake merge gets pushed upstream and we need to tell everyone to stop?
+
+On one hand, it's a matter of keeping the history tidy and prevent information lost, but on a more technical note, it's about giving git the right knowledge about our intentions so it knows how to merge between branches correctly going forward.
+
+https://devblogs.microsoft.com/oldnewthing/20180312-00/?p=98215
