@@ -12,6 +12,7 @@ buildState({
         yield* run("cd repo && git init");
         yield* run("git config --global user.name 'Charles Montgomery Plantagenet Schicklgruber Burns'");
         yield* run("git config --global user.email 'mr@burns.invalid'");
+        yield* run("stream-git-dumps &");
         await save("1-git-init.bin");
 
         yield* run("git cat-file --batch-check --batch-all-objects"); // While this doesn't affect git state, run this anyway so it's available in bash history

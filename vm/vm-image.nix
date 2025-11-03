@@ -90,6 +90,39 @@
 
               # Important for the git tutorial
               pkgs-i686.pigz # For compressing objects into zlib stream
+
+              (pkgs-i686.stdenv.mkDerivation {
+                name = "vm-scripts";
+                nativeBuildInputs = [
+                  pkgs-i686.makeWrapper
+                ];
+                src = nixpkgs.lib.fileset.toSource {
+                  root = ./.;
+                  fileset = nixpkgs.lib.fileset.unions [
+                    ./bin
+                  ];
+                };
+                installPhase = ''
+                  runHook preInstall
+                  mkdir -p "$out"
+                  cp -ar . "$out"
+                  runHook postInstall
+                '';
+                postFixup = ''
+                  patchShebangs --host "$out/bin/stream-git-dumps"
+                  wrapProgram "$out/bin/stream-git-dumps" \
+                    --set PATH ${pkgs-i686.lib.makeBinPath [
+                      pkgs-i686.inotify-tools
+                      pkgs-i686.jq
+                    ]}
+                  patchShebangs --host "$out/bin/dump-git.sh"
+                  wrapProgram "$out/bin/dump-git.sh" \
+                    --set PATH ${pkgs-i686.lib.makeBinPath [
+                      pkgs-i686.jq
+                    ]}
+                  patchShebangs --host "$out/bin/send-to-host.sh"
+                '';
+              })
             ];
             programs = {
               git.enable = true;

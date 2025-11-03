@@ -9,5 +9,6 @@ export default {
     vga_memory_size: 8 * 1024 * 1024,
     cdrom: { url: toV86Url(new URL("nixos.iso", IMAGES_DIR)) },
     filesystem: {}, // Empty 9p filesystem
+    uart1: true, // For guest-host communications about git state
     log_level: 0, // LOG_NONE
 };

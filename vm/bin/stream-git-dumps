@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+inotifywait --monitor --recursive "$(git rev-parse --show-toplevel)/.git" | {
+    last_update_ms=0
+    while read -r line
+    do
+        # Don't accumulate events - always drain it all out
+        while read -r -t 0 line
+        do
+            # Why isn't it returning failure?
+            if [[ -z "$line" ]]
+            then
+                break
+            fi
+            line=""
+        done
+        ./dump-git.sh | jq '{ type: "git-dump", dump: . }' | ./send-to-host.sh
+    done
+}
