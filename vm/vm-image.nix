@@ -113,11 +113,13 @@
                   wrapProgram "$out/bin/stream-git-dumps" \
                     --set PATH ${pkgs-i686.lib.makeBinPath [
                       pkgs-i686.inotify-tools
+                      pkgs-i686.git
                       pkgs-i686.jq
                     ]}
                   patchShebangs --host "$out/bin/dump-git.sh"
                   wrapProgram "$out/bin/dump-git.sh" \
                     --set PATH ${pkgs-i686.lib.makeBinPath [
+                      pkgs-i686.git
                       pkgs-i686.jq
                     ]}
                   patchShebangs --host "$out/bin/send-to-host.sh"
