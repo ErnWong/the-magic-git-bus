@@ -11,7 +11,7 @@ set -o pipefail
         if [[ "$type" == "commit" ]]
         then
             git --no-pager log -1 --pretty='format:%H%x00%P%x00%T%x00%s' $oid |
-                jq --raw-input '
+                jq --compact-output --raw-input '
                     rtrimstr("\n") 
                     | split("\u0000")
                     | {
@@ -26,7 +26,7 @@ set -o pipefail
             {
                 echo $oid
                 git ls-tree --format='%(path)%x00%(objectname)' $oid
-            } | jq --raw-input --slurp '
+            } | jq --compact-output --raw-input --slurp '
                 rtrimstr("\n") 
                 | split("\n")
                 | {
@@ -39,7 +39,7 @@ set -o pipefail
             {
                 echo -n -e "$oid\x00"
                 git cat-file blob $oid
-            } | jq --raw-input --slurp '
+            } | jq --compact-output --raw-input --slurp '
                 rtrimstr("\n") 
                 | split("\u0000")
                 | {
@@ -52,7 +52,7 @@ set -o pipefail
             {
                 echo -n -e "$oid\x00"
                 git cat-file tag $oid
-            } | jq --raw-input --slurp '
+            } | jq --compact-output --raw-input --slurp '
                 rtrimstr("\n") 
                 | split("\u0000")
                 | {
@@ -74,7 +74,7 @@ set -o pipefail
     done
 
     git for-each-ref --format="%(refname)%00%(objectname)%00%(symref)" |
-        jq --raw-input '
+        jq --compact-output --raw-input '
             rtrimstr("\n") 
             | split("\u0000")
             | {
@@ -82,4 +82,4 @@ set -o pipefail
                 target: .[1],
                 symref: .[2]
             }'
-} | jq --slurp
+} | jq --compact-output --slurp

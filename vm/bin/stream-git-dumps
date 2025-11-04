@@ -20,6 +20,6 @@ inotifywait --monitor --event close_write --event create --event move --event de
             fi
             line=""
         done
-        "$SCRIPT_DIR/dump-git.sh" | jq '{ type: "git-dump", dump: . }' | "$SCRIPT_DIR/send-to-host.sh"
+        "$SCRIPT_DIR/dump-git.sh" | jq --compact-output '{ type: "git-dump", dump: . }' | "$SCRIPT_DIR/send-to-host.sh"
     done
 }
