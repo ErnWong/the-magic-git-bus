@@ -40,6 +40,12 @@
           url = "https://cdn.jsdelivr.net/npm/xterm@5.2.1/css/xterm.css";
           hash = "sha256-gy8/LGA7Q61DUf8ElwFQzHqHMBQnbbEmpgZcbdgeSHI=";
         }}" ./xterm.css
+        ln -s "${pkgs.fetchurl { # TODO Use npm the nix way
+          url = "https://cdn.jsdelivr.net/npm/isomorphic-git@1.34.2/index.umd.min.js";
+          hash = "sha256-1cmm7c9nXc5hk2acipphtUfjPco0Nw1oFvOKms8eqEo=";
+          #url = "https://cdn.jsdelivr.net/npm/isomorphic-git@1.34.2/index.cjs";
+          #hash = "sha256-LgW+AK3yZJOCREocZrDUSdUHt//xO+Vsxnk7WGvnxjE=";
+        }}" ./isomorphic-git.js
         mv client/* .
         rmdir client
         runHook postBuild

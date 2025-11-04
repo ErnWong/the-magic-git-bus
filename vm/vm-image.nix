@@ -1,6 +1,7 @@
 { nixpkgs, nixpkgs-i686, nixos-generators }:
   let
     pkgs-i686 = nixpkgs-i686.legacyPackages.i686-linux;
+    method = "9p"; # "9p" | "inotify"
   in
     nixos-generators.nixosGenerate {
       pkgs = nixpkgs-i686.legacyPackages.i686-linux;
@@ -91,7 +92,7 @@
               # Important for the git tutorial
               pkgs-i686.pigz # For compressing objects into zlib stream
 
-              (pkgs-i686.stdenv.mkDerivation {
+            ] ++ (if method == "inotify" then [(pkgs-i686.stdenv.mkDerivation {
                 name = "vm-scripts";
                 nativeBuildInputs = [
                   pkgs-i686.makeWrapper
@@ -132,7 +133,7 @@
                     ]}
                 '';
               })
-            ];
+            ] else []);
             programs = {
               git.enable = true;
             };

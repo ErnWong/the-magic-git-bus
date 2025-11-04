@@ -2,17 +2,25 @@
 
 import buildState from "./state-builder.js";
 
+const METHOD = '9p'; // '9p' | 'inotify'
+
 buildState({
     initialState: "0-login.bin",
     script: async function*({ delay, run, save })
     {
         await delay(4000);
         yield* run("mkdir ~/repo");
-        //yield* run("mount -t 9p -o trans=virtio,version=9p2000.L host9p ~/repo");
+        if(METHOD === '9p')
+        {
+            yield* run("mount -t 9p -o trans=virtio,version=9p2000.L host9p ~/repo");
+        }
         yield* run("cd repo && git init");
         yield* run("git config --global user.name 'Charles Montgomery Plantagenet Schicklgruber Burns'");
         yield* run("git config --global user.email 'mr@burns.invalid'");
-        yield* run("stream-git-dumps &");
+        if(METHOD === 'inotify')
+        {
+            yield* run("stream-git-dumps &");
+        }
         await save("1-git-init.bin");
 
         yield* run("git cat-file --batch-check --batch-all-objects"); // While this doesn't affect git state, run this anyway so it's available in bash history
