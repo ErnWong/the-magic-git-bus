@@ -128,6 +128,7 @@
                   wrapProgram "$out/bin/send-to-host.sh" \
                     --set PATH ${pkgs-i686.lib.makeBinPath [
                       pkgs-i686.coreutils-full
+                      pkgs-i686.util-linux
                     ]}
                 '';
               })
