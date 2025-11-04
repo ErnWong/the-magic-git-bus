@@ -61,3 +61,26 @@ for(const state of states)
     })();
     document.getElementById("vm").parentElement.appendChild(button);
 }
+
+(() => {
+    let text = ''; 
+    emulator.add_listener('serial1-output-byte', byte => {
+        const character = String.fromCharCode(byte);
+        if(character == '\n')
+        {
+            try
+            {
+                const git = JSON.parse(text);
+                document.getElementById('graph').textContent = JSON.stringify(git, null, 2);
+            }
+            catch(e)
+            {
+            }
+            text = '';
+        }
+        else
+        {
+            text += character;
+        }
+    });
+})();
