@@ -115,14 +115,20 @@
                       pkgs-i686.inotify-tools
                       pkgs-i686.git
                       pkgs-i686.jq
+                      pkgs-i686.coreutils-full
                     ]}
                   patchShebangs --host "$out/bin/dump-git.sh"
                   wrapProgram "$out/bin/dump-git.sh" \
                     --set PATH ${pkgs-i686.lib.makeBinPath [
                       pkgs-i686.git
                       pkgs-i686.jq
+                      pkgs-i686.coreutils-full
                     ]}
                   patchShebangs --host "$out/bin/send-to-host.sh"
+                  wrapProgram "$out/bin/send-to-host.sh" \
+                    --set PATH ${pkgs-i686.lib.makeBinPath [
+                      pkgs-i686.coreutils-full
+                    ]}
                 '';
               })
             ];
