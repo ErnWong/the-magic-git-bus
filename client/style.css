@@ -1,0 +1,9 @@
+#vm {
+    display: inline-block;
+    border-radius: 4px;
+    background-color: black;
+}
+
+#vm .xterm-viewport {
+    scrollbar-width: none;
+}
