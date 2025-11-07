@@ -1,0 +1,409 @@
+<html>
+    <head>
+        <script src="https://cdn.jsdelivr.net/npm/elkjs@0.11.0/lib/elk.bundled.js"></script>
+    </head>
+    <body>
+        <div id="graph"></div>
+        <script type="text/javascript">
+            const objects = [{"object":{"message":"My first commit\n","parent":[],"tree":"6db497f8ca5a8bf50591fd13beb12fc66dff1d31","author":{"name":"Waylon Smithers","email":"mr@smithers.invalid","timestamp":1762902000,"timezoneOffset":-780},"committer":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780}},"format":"parsed","source":"objects/02/cbc162b0a74f3cbb90c6c7bcf7387b3033015b","type":"commit","oid":"02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"},{"object":{"0":109,"1":111,"2":100,"3":105,"4":102,"5":105,"6":101,"7":100,"8":10},"format":"content","source":"objects/2e/0996000b7e9019eabcad29391bf0f5c7702f0b","type":"blob","oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b"},{"object":{"0":102,"1":111,"2":111,"3":98,"4":97,"5":114,"6":10},"format":"content","source":"objects/32/3fae03f4606ea9991df8befbb2fca795e648fa","type":"blob","oid":"323fae03f4606ea9991df8befbb2fca795e648fa"},{"object":{"0":104,"1":101,"2":108,"3":108,"4":111,"5":32,"6":119,"7":111,"8":114,"9":108,"10":100,"11":10},"format":"content","source":"objects/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad"},{"object":[{"mode":"040000","path":"folder","oid":"974cd135eb6c4da9d3f14e1de564f76a8a07234e","type":"tree"},{"mode":"100644","path":"myfile.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"},{"mode":"100644","path":"otherfile.txt","oid":"323fae03f4606ea9991df8befbb2fca795e648fa","type":"blob"}],"format":"parsed","source":"objects/48/6a17fba0168a9242e39931c2b0233ada6a9671","type":"tree","oid":"486a17fba0168a9242e39931c2b0233ada6a9671"},{"object":[{"mode":"040000","path":"folder","oid":"8209f53524b4818a6d18424613de08c1c6552f11","type":"tree"},{"mode":"100644","path":"myfile.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"},{"mode":"100644","path":"otherfile.txt","oid":"323fae03f4606ea9991df8befbb2fca795e648fa","type":"blob"}],"format":"parsed","source":"objects/6d/b497f8ca5a8bf50591fd13beb12fc66dff1d31","type":"tree","oid":"6db497f8ca5a8bf50591fd13beb12fc66dff1d31"},{"object":{"message":"Second commit!\n","parent":["02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"],"tree":"486a17fba0168a9242e39931c2b0233ada6a9671","author":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780},"committer":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780}},"format":"parsed","source":"objects/70/4cad9af4578d8f3248fe4c4e044014322f1154","type":"commit","oid":"704cad9af4578d8f3248fe4c4e044014322f1154"},{"object":[{"mode":"100644","path":"copy.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"}],"format":"parsed","source":"objects/82/09f53524b4818a6d18424613de08c1c6552f11","type":"tree","oid":"8209f53524b4818a6d18424613de08c1c6552f11"},{"object":[{"mode":"100644","path":"copy.txt","oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b","type":"blob"}],"format":"parsed","source":"objects/97/4cd135eb6c4da9d3f14e1de564f76a8a07234e","type":"tree","oid":"974cd135eb6c4da9d3f14e1de564f76a8a07234e"}];
+
+
+            const TYPES = ['tag', 'commit', 'tree', 'blob'];
+            const port_id_for_incoming = (oid) => `${oid}-in`;
+            const port_id_for_commit_from_tag = (oid) => `${oid}-in-tag`;
+            const tree_entry_edge = (oid, treeEntry) =>
+            ({
+                id: port_id_for_tree_entry(oid, treeEntry),
+                sources: [port_id_for_tree_entry(oid, treeEntry)],
+                targets: [port_id_for_incoming(treeEntry.oid)],
+            });
+            const port_id_for_commit_tree = (oid) => `${oid}-tree`;
+            const port_id_for_commit_parent = (oid, parentIndex) => `${oid}-parent-${parentIndex}`;
+            const port_id_for_tree_entry = (oid, treeEntry) => `${oid}-${treeEntry.path}`;
+            //const PORTS_FOR_TYPE =
+            //{
+            //    blob: object => [{
+            //        id: port_id_for_incoming(object.oid),
+            //        layoutOptions: {
+            //            "elk.port.side": "WEST",
+            //        },
+            //    }],
+            //    commit: object => [
+            //        {
+            //            id: port_id_for_commit_tree(object.oid),
+            //            layoutOptions: {
+            //                "elk.port.side": "EAST",
+            //            },
+            //        },
+            //        {
+            //            id: port_id_for_commit_from_tag(object.oid),
+            //            layoutOptions: {
+            //                "elk.port.side": "WEST",
+            //            },
+            //        },
+            //        {
+            //            id: port_id_for_incoming(object.oid),
+            //            layoutOptions: {
+            //                "elk.port.side": "NORTH",
+            //            },
+            //        },
+            //        ...object.object.parent.map((parent, parentindex) =>
+            //        ({
+            //            id: port_id_for_commit_parent(object.oid, parentindex),
+            //        })),
+            //    ],
+            //    tree: object => [
+            //        {
+            //            id: port_id_for_incoming(object.oid),
+            //            layoutOptions: {
+            //                "elk.port.side": "WEST",
+            //            },
+            //        },
+            //        ...object.object.map(treeEntry =>
+            //        ({
+            //            id: port_id_for_tree_entry(object.oid, treeEntry),
+            //            layoutOptions: {
+            //                "elk.port.side": "EAST",
+            //            },
+            //        })),
+            //    ],
+            //    tag: object => [
+            //        {
+            //            id: port_id_for_incoming(object.oid),
+            //        },
+            //    ],
+            //};
+            const EDGES_FOR_TYPE =
+            {
+                blob: _ => [],
+                commit: object => [
+                    {
+                        id: port_id_for_commit_tree(object.oid) + '-edge',
+                        sources: [port_id_for_commit_tree(object.oid)],
+                        targets: [port_id_for_incoming(object.object.tree)],
+                        type: 'tree',
+                    },
+                    ...object.object.parent.map((parent, parentIndex) =>
+                    ({
+                        id: port_id_for_commit_parent(object.oid, parentIndex) + '-edge',
+                        sources: [port_id_for_commit_parent(object.oid, parentIndex)],
+                        targets: [port_id_for_incoming(parent)],
+                        type: 'commit',
+                    })),
+                ],
+                tree: object => object.object.map(treeEntry =>
+                ({
+                    id: port_id_for_tree_entry(object.oid, treeEntry) + '-edge',
+                    sources: [port_id_for_tree_entry(object.oid, treeEntry)],
+                    targets: [port_id_for_incoming(treeEntry.oid)],
+                    type: treeEntry.type,
+                })),
+                tag: object =>
+                ({
+                    id: `${object.oid}-target`,
+                    sources: [object.oid],
+                    targets: [port_id_for_commit_from_tag(object.object.object)],
+                    type: object.object.type,
+                }),
+            };
+            //const iota = length => [...Array(length)].map((_, i) => i);
+            const outsideEdges = [];
+            const edgeInfoPerType = Object.fromEntries(TYPES.map(type => [type, {
+                edges: [],
+                ports: new Map(),
+            }]));
+
+            for (const object of objects) {
+                for (const edge of EDGES_FOR_TYPE[object.type](object)) {
+                    if(edge.type === object.type) {
+                        edgeInfoPerType[object.type].edges.push({
+                            ...edge,
+                            isEnd: true,
+                        });
+                    } else {
+                        const sourceSide = TYPES.indexOf(object.type) < TYPES.indexOf(edge.type) ? 'EAST' : 'WESET';
+                        const sourcePortId = `${edge.sources[0]}-type-source-port-${sourceSide}`;
+                        const targetSide = TYPES.indexOf(object.type) < TYPES.indexOf(edge.type) ? 'WEST' : 'EAST';
+                        const targetPortId = `${edge.targets[0]}-type-target-port-${targetSide}`;
+                        edgeInfoPerType[object.type].ports.set(sourcePortId, {
+                            id: sourcePortId,
+                            layoutOptions: {
+                                'elk.port.side': sourceSide,
+                                "elk.portConstraints": "FIXED_SIDE",
+                            },
+                        });
+                        edgeInfoPerType[object.type].edges.push({
+                            id: `${edge.sources[0]}-type-source-port-edge`,
+                            sources: edge.sources,
+                            targets: [sourcePortId],
+                            isEnd: false,
+                        });
+                        outsideEdges.push({
+                            id: `${edge.id}-outside`,
+                            sources: [sourcePortId],
+                            targets: [targetPortId],
+                            isEnd: false,
+                        });
+                        edgeInfoPerType[edge.type].ports.set(targetPortId, {
+                            id: targetPortId,
+                            layoutOptions: {
+                                'elk.port.side': targetSide,
+                                "elk.portConstraints": "FIXED_SIDE",
+                            },
+                        });
+                        edgeInfoPerType[edge.type].edges.push({
+                            id: `${edge.targets[0]}-type-target-port-edge`,
+                            sources: [targetPortId],
+                            targets: edge.targets,
+                            isEnd: true,
+                        });
+                    }
+                }
+            }
+
+            const graph =
+            {
+                id: 'git',
+                layoutOptions: {
+                    //'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+                    'elk.direction': 'RIGHT',
+                    "elk.portConstraints": "FIXED_SIDE",
+                },
+                children: [
+                    {
+                        id: 'objects',
+                        layoutOptions: {
+                            'elk.direction': 'RIGHT',
+                            "elk.portConstraints": "FIXED_SIDE",
+                        },
+                        children:
+                        [
+                            {
+                                id: 'tag',
+                                width: 100,
+                                layoutOptions: {
+                                    'elk.direction': 'DOWN',
+                                    "elk.portConstraints": "FIXED_SIDE",
+                                },
+                                children: objects
+                                    .filter(object => object.type === 'tag')
+                                    .map(object =>
+                                    ({
+                                        id: object.oid,
+                                        width: 100,
+                                        height: 100,
+                                        fill: 'green',
+                                        ports: [{
+                                            id: port_id_for_incoming(object.oid),
+                                            layoutOptions: {
+                                                "elk.port.side": "WEST",
+                                            },
+                                        }],
+                                    })),
+                                edges: edgeInfoPerType.tag.edges,
+                                ports: [...edgeInfoPerType.tag.ports.values()],
+                            },
+                            {
+                                id: 'commit',
+                                width: 100,
+                                layoutOptions: {
+                                    'elk.direction': 'UP',
+                                    "elk.portConstraints": "FIXED_SIDE",
+                                },
+                                children: objects
+                                    .filter(object => object.type === 'commit')
+                                    .map(object =>
+                                    ({
+                                        id: object.oid,
+                                        width: 100,
+                                        height: 100,
+                                        fill: 'yellow',
+                                        layoutOptions: {
+                                            "elk.portConstraints": "FIXED_SIDE",
+                                        },
+                                        ports: [
+                                            {
+                                                id: port_id_for_commit_tree(object.oid),
+                                                layoutOptions: {
+                                                    "elk.port.side": "EAST",
+                                                    "elk.portConstraints": "FIXED_SIDE",
+                                                },
+                                            },
+                                            {
+                                                id: port_id_for_commit_from_tag(object.oid),
+                                                layoutOptions: {
+                                                    "elk.port.side": "WEST",
+                                                },
+                                            },
+                                            {
+                                                id: port_id_for_incoming(object.oid),
+                                                layoutOptions: {
+                                                    "elk.port.side": "SOUTH",
+                                                },
+                                            },
+                                            ...object.object.parent.map((parent, parentindex) =>
+                                            ({
+                                                id: port_id_for_commit_parent(object.oid, parentindex),
+                                                layoutOptions: {
+                                                    "elk.port.side": "NORTH",
+                                                    "elk.portConstraints": "FIXED_SIDE",
+                                                },
+                                            })),
+                                        ],
+                                    })),
+                                edges: edgeInfoPerType.commit.edges,
+                                ports: [...edgeInfoPerType.commit.ports.values()],
+                            },
+                            {
+                                id: 'tree',
+                                width: 100,
+                                layoutOptions: {
+                                    'elk.direction': 'RIGHT',
+                                    "elk.portConstraints": "FIXED_SIDE",
+                                },
+                                children: objects
+                                    .filter(object => object.type === 'tree')
+                                    .map(object =>
+                                    ({
+                                        id: object.oid,
+                                        width: 100,
+                                        height: 100,
+                                        fill: 'grey',
+                                        ports: [
+                                            {
+                                                id: port_id_for_incoming(object.oid),
+                                                layoutOptions: {
+                                                    "elk.port.side": "WEST",
+                                                },
+                                            },
+                                            ...object.object.map(treeEntry =>
+                                            ({
+                                                id: port_id_for_tree_entry(object.oid, treeEntry),
+                                                layoutOptions: {
+                                                    "elk.port.side": "EAST",
+                                                },
+                                            })),
+                                        ],
+                                    })),
+                                edges: edgeInfoPerType.tree.edges,
+                                ports: [...edgeInfoPerType.tree.ports.values()],
+                            },
+                            {
+                                id: 'blob',
+                                width: 100,
+                                layoutOptions: {
+                                    'elk.direction': 'LEFT',
+                                    "elk.portConstraints": "FIXED_SIDE",
+                                },
+                                children: objects
+                                    .filter(object => object.type === 'blob')
+                                    .map(object =>
+                                    ({
+                                        id: object.oid,
+                                        width: 100,
+                                        height: 100,
+                                        fill: 'cyan',
+                                        ports: [{
+                                            id: port_id_for_incoming(object.oid),
+                                            layoutOptions: {
+                                                "elk.port.side": "WEST",
+                                            },
+                                        }],
+                                    })),
+                                edges: edgeInfoPerType.blob.edges,
+                                ports: [...edgeInfoPerType.blob.ports.values()],
+                            },
+                        ],
+                        edges:
+                        [
+                            //...iota(TYPES.length - 1).map(i => (
+                            //    {
+                            //        id: `${TYPES[i]}-${TYPES[i + 1]}`,
+                            //        sources: [TYPES[i]],
+                            //        targets: [TYPES[i + 1]],
+                            //    }
+                            //)),
+
+                            // ...objects
+                            //     .filter(({ type }) => type === 'tree')
+                            //     .flatMap(object => object.object
+                            //         .filter(treeEntry => treeEntry.type !== 'tree')
+                            //         .map(treeEntry => tree_entry_edge(object.oid, treeEntry))
+                            //     ),
+                            // ...objects
+                            //     .filter(({ type }) => type === 'commit')
+                            //     .map(object =>
+                            //     ({
+                            //         id: port_id_for_commit_tree(object.oid),
+                            //         sources: [port_id_for_commit_tree(object.oid)],
+                            //         targets: [object.object.tree],
+                            //     })),
+                            // ...objects
+                            //     .filter(object => object.type === 'tag')
+                            //     .filter(object => object.object.type !== 'tag')
+                            //     .map(object => tag_edge(object)),
+                            ...outsideEdges,
+                        ],
+                    },
+                    {
+                        id: 'refs',
+                    },
+                ],
+                //edges: objects.flatMap(object => EDGES_FOR_TYPE[object.type](object)),
+            };
+            window.graph = graph;
+            (async () => {
+
+                const elk = new ELK({
+                    "elk.portConstraints": "FIXED_SIDE",
+                    //'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+                });
+                const graphWithLayout = await elk.layout(graph);
+
+                const toSvg = node => `
+                    <g transform="translate(${node.x}, ${node.y})">
+                        <rect
+                            width=${node.width}
+                            height=${node.height}
+                            stroke="black"
+                            stroke-width="1"
+                            fill="${node.fill ?? 'None'}"
+                        />
+                        <text>${node.id.slice(0,7)}</text>
+                        ${node.children?.map(child => toSvg(child)).join('') ?? ''}
+                        ${node.edges?.map(edge => `
+                            ${edge.sections?.map(section => `
+                                <polyline
+                                    stroke="black"
+                                    stroke-width"1"
+                                    fill="none"
+                                    ${edge.isEnd ? `marker-end="url(#arrow)"` : ''}
+                                    points="${[section.startPoint, ...(section.bendPoints ?? []), section.endPoint].map(point => `${point.x},${point.y}`).join(' ')}"
+                                />
+                            `).join('') ?? ''}
+                            ${edge.junctionPoints?.map(junction => `
+                                <circle
+                                    cx=${junction.x}
+                                    cy=${junction.y}
+                                    r="3"
+                                    fill="black"
+                                />
+                            `).join('') ?? ''}
+                        `).join('') ?? ''}
+                    </g>
+                `;
+
+                document.getElementById('graph').innerHTML = `
+                    <svg width="${graphWithLayout.width}" height="${graphWithLayout.height}">
+                        <defs>
+                            <marker id="arrow" viewBox="-5 0 5 10" orient="auto-start-reverse" refX="5" refY="5" markerWidth="5" markerHeight="5">
+                                <path d="M -5 0 L 5 5 L -5 10 z" fill="black" />
+                            </marker>
+                        </defs>
+                        ${toSvg(graphWithLayout)}
+                    </svg>
+                `;
+            })();
+        </script>
+    </body>
+</html>
