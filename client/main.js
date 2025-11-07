@@ -165,7 +165,7 @@ if(METHOD === '9p')
         const graphDiv = document.getElementById('graph');
 
         const elk = new ELK({
-            'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+            //'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
         });
 
         setInterval(async () =>
@@ -173,82 +173,124 @@ if(METHOD === '9p')
             const cache = {};
             const oids = await Array.fromAsync(git.listAllObjects({ fs, cache, dir: '' }));
             const objects = await Array.fromAsync(oids.map(oid => git.readObject({ fs, cache, oid, dir: '', format: 'parsed' })));
-            // const TYPES = ['tag', 'commit', 'tree', 'blob'];
+            const TYPES = ['tag', 'commit', 'tree', 'blob'];
             const tree_entry_edge = (oid, treeEntry) =>
             ({
                 id: port_id_for_tree_entry(oid, treeEntry),
                 sources: [port_id_for_tree_entry(oid, treeEntry)],
                 targets: [treeEntry.oid],
             });
-            const tag_edge = object =>
-            ({
-                id: `${object.oid}-target`,
-                sources: [object.oid],
-                targets: [object.object.object],
-            });
             const port_id_for_commit_tree = (oid) => `${oid}-tree`;
             const port_id_for_commit_parent = (oid, parentIndex) => `${oid}-parent-${parentIndex}`;
             const port_id_for_tree_entry = (oid, treeEntry) => `${oid}-${treeEntry.path}`;
-            // const PORTS_FOR_TYPE =
-            // {
-            //     blob: _ => [],
-            //     commit: object => [
-            //         {
-            //             id: port_id_for_commit_tree(object.oid),
-            //         },
-            //         ...object.object.parent.map((parent, parentindex) =>
-            //         ({
-            //             id: port_id_for_commit_parent(object.oid, parentindex),
-            //         })),
-            //     ],
-            //     tree: object => object.object.map(treeEntry =>
-            //     ({
-            //         id: port_id_for_tree_entry(object.oid, treeEntry),
-            //     })),
-            //     tag: object => [],
-            // };
-            // const EDGES_FOR_TYPE =
-            // {
-            //     blob: _ => [],
-            //     commit: object => [
-            //         {
-            //             id: port_id_for_commit_tree(object.oid),
-            //             sources: [port_id_for_commit_tree(object.oid)],
-            //             targets: [object.object.tree],
-            //         },
-            //         ...object.object.parent.map((parent, parentIndex) =>
-            //         ({
-            //             id: port_id_for_commit_parent(object.oid, parentIndex),
-            //             sources: [port_id_for_commit_parent(object.oid, parentIndex)],
-            //             targets: [parent],
-            //         })),
-            //     ],
-            //     tree: object => object.object.map(treeEntry =>
-            //     ({
-            //         id: port_id_for_tree_entry(object.oid, treeEntry),
-            //         sources: [port_id_for_tree_entry(object.oid, treeEntry)],
-            //         targets: [treeEntry.oid],
-            //     })),
-            //     tag: object =>
-            //     ({
-            //         id: `${object.oid}-target`,
-            //         sources: [object.oid],
-            //         targets: [object.object.object],
-            //     }),
-            // };
-            // const iota = length => [...Array(length)].map((_, i) => i);
+            const PORTS_FOR_TYPE =
+            {
+                blob: _ => [],
+                commit: object => [
+                    {
+                        id: port_id_for_commit_tree(object.oid),
+                    },
+                    ...object.object.parent.map((parent, parentindex) =>
+                    ({
+                        id: port_id_for_commit_parent(object.oid, parentindex),
+                    })),
+                ],
+                tree: object => object.object.map(treeEntry =>
+                ({
+                    id: port_id_for_tree_entry(object.oid, treeEntry),
+                })),
+                tag: object => [],
+            };
+            const EDGES_FOR_TYPE =
+            {
+                blob: _ => [],
+                commit: object => [
+                    {
+                        id: port_id_for_commit_tree(object.oid),
+                        sources: [port_id_for_commit_tree(object.oid)],
+                        targets: [object.object.tree],
+                        type: 'tree',
+                    },
+                    ...object.object.parent.map((parent, parentIndex) =>
+                    ({
+                        id: port_id_for_commit_parent(object.oid, parentIndex),
+                        sources: [port_id_for_commit_parent(object.oid, parentIndex)],
+                        targets: [parent],
+                        type: 'commit',
+                    })),
+                ],
+                tree: object => object.object.map(treeEntry =>
+                ({
+                    id: port_id_for_tree_entry(object.oid, treeEntry),
+                    sources: [port_id_for_tree_entry(object.oid, treeEntry)],
+                    targets: [treeEntry.oid],
+                    type: treeEntry.type,
+                })),
+                tag: object =>
+                ({
+                    id: `${object.oid}-target`,
+                    sources: [object.oid],
+                    targets: [object.object.object],
+                    type: object.object.type,
+                }),
+            };
+            //const iota = length => [...Array(length)].map((_, i) => i);
+            const outsideEdges = [];
+            const edgeInfoPerType = Object.fromEntries(TYPES.map(type => [type, {
+                edges: [],
+                ports: [],
+            }]));
+
+            for (const object of objects) {
+                for (const edge of EDGES_FOR_TYPE[object.type](object)) {
+                    if(edge.type === object.type) {
+                        edgeInfoPerType[object.type].edges.push(edge);
+                    } else {
+                        edgeInfoPerType[object.type].ports.push({
+                            id: `${edge.id}-type-source-port`,
+                            layoutOptions: {
+                                'elk.port.side': TYPES.indexOf(object.type) < TYPES.indexOf(edge.type) ? 'east' : 'west',
+                                "elk.portConstraints": "FIXED_SIDE",
+                            },
+                        });
+                        edgeInfoPerType[object.type].edges.push({
+                            id: `${edge.id}-type-source-port-edge`,
+                            sources: edge.sources,
+                            targets: [`${edge.id}-type-source-port`],
+                        });
+                        outsideEdges.push({
+                            id: `${edge.id}-outside`,
+                            sources: [`${edge.id}-type-source-port`],
+                            targets: [`${edge.id}-type-target-port`],
+                        });
+                        edgeInfoPerType[edge.type].ports.push({
+                            id: `${edge.id}-type-target-port`,
+                            layoutOptions: {
+                                'elk.port.side': TYPES.indexOf(object.type) < TYPES.indexOf(edge.type) ? 'west' : 'east',
+                                "elk.portConstraints": "FIXED_SIDE",
+                            },
+                        });
+                        edgeInfoPerType[edge.type].edges.push({
+                            id: `${edge.id}-type-target-port-edge`,
+                            targets: [`${edge.id}-type-target-port`],
+                            sources: edge.targets,
+                        });
+                    }
+                }
+            }
+
             const graph =
             {
                 id: 'git',
                 layoutOptions: {
-                    'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-                    //'direction': 'RIGHT',
+                    //'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+                    'elk.direction': 'RIGHT',
                 },
                 children: [
                     {
                         id: 'objects',
                         layoutOptions: {
-                            //'direction': 'RIGHT',
+                            'elk.direction': 'RIGHT',
                         },
                         children:
                         [
@@ -256,7 +298,7 @@ if(METHOD === '9p')
                                 id: 'tag',
                                 width: 100,
                                 layoutOptions: {
-                                    //'direction': 'DOWN',
+                                    'elk.direction': 'DOWN',
                                 },
                                 children: objects
                                     .filter(object => object.type === 'tag')
@@ -266,16 +308,14 @@ if(METHOD === '9p')
                                         width: 100,
                                         height: 100,
                                     })),
-                                edges: objects
-                                    .filter(object => object.type === 'tag')
-                                    .filter(object => object.object.type === 'tag')
-                                    .map(object => tag_edge(object)),
+                                edges: edgeInfoPerType.tag.edges,
+                                ports: edgeInfoPerType.tag.ports,
                             },
                             {
                                 id: 'commit',
                                 width: 100,
                                 layoutOptions: {
-                                    //'direction': 'DOWN',
+                                    'elk.direction': 'UP',
                                 },
                                 children: objects
                                     .filter(object => object.type === 'commit')
@@ -287,6 +327,10 @@ if(METHOD === '9p')
                                         ports: [
                                             {
                                                 id: port_id_for_commit_tree(object.oid),
+                                                layoutOptions: {
+                                                    "elk.port.side": "EAST",
+                                                    "elk.portConstraints": "FIXED_SIDE",
+                                                },
                                             },
                                             ...object.object.parent.map((parent, parentindex) =>
                                             ({
@@ -294,20 +338,14 @@ if(METHOD === '9p')
                                             })),
                                         ],
                                     })),
-                                edges: objects
-                                    .filter(object => object.type === 'commit')
-                                    .flatMap(object => object.object.parent.map((parent, parentIndex) =>
-                                    ({
-                                        id: port_id_for_commit_parent(object.oid, parentIndex),
-                                        sources: [port_id_for_commit_parent(object.oid, parentIndex)],
-                                        targets: [parent],
-                                    }))),
+                                edges: edgeInfoPerType.commit.edges,
+                                ports: edgeInfoPerType.commit.ports,
                             },
                             {
                                 id: 'tree',
                                 width: 100,
                                 layoutOptions: {
-                                    //'direction': 'DOWN',
+                                    'elk.direction': 'RIGHT',
                                 },
                                 children: objects
                                     .filter(object => object.type === 'tree')
@@ -321,18 +359,14 @@ if(METHOD === '9p')
                                             id: port_id_for_tree_entry(object.oid, treeEntry),
                                         })),
                                     })),
-                                edges: objects
-                                    .filter(object => object.type === 'tree')
-                                    .flatMap(object => object.object
-                                        .filter(({ type }) => type === 'tree')
-                                        .map(treeEntry => tree_entry_edge(object.oid, treeEntry))
-                                    ),
+                                edges: edgeInfoPerType.tree.edges,
+                                ports: edgeInfoPerType.tree.ports,
                             },
                             {
                                 id: 'blob',
                                 width: 100,
                                 layoutOptions: {
-                                    //'direction': 'DOWN',
+                                    'elk.direction': 'DOWN',
                                 },
                                 children: objects
                                     .filter(object => object.type === 'blob')
@@ -342,6 +376,8 @@ if(METHOD === '9p')
                                         width: 100,
                                         height: 100,
                                     })),
+                                edges: edgeInfoPerType.blob.edges,
+                                ports: edgeInfoPerType.blob.ports,
                             },
                         ],
                         edges:
@@ -354,24 +390,25 @@ if(METHOD === '9p')
                             //    }
                             //)),
 
-                            ...objects
-                                .filter(({ type }) => type === 'tree')
-                                .flatMap(object => object.object
-                                    .filter(treeEntry => treeEntry.type !== 'tree')
-                                    .map(treeEntry => tree_entry_edge(object.oid, treeEntry))
-                                ),
-                            ...objects
-                                .filter(({ type }) => type === 'commit')
-                                .map(object =>
-                                ({
-                                    id: port_id_for_commit_tree(object.oid),
-                                    sources: [port_id_for_commit_tree(object.oid)],
-                                    targets: [object.object.tree],
-                                })),
-                            ...objects
-                                .filter(object => object.type === 'tag')
-                                .filter(object => object.object.type !== 'tag')
-                                .map(object => tag_edge(object)),
+                            // ...objects
+                            //     .filter(({ type }) => type === 'tree')
+                            //     .flatMap(object => object.object
+                            //         .filter(treeEntry => treeEntry.type !== 'tree')
+                            //         .map(treeEntry => tree_entry_edge(object.oid, treeEntry))
+                            //     ),
+                            // ...objects
+                            //     .filter(({ type }) => type === 'commit')
+                            //     .map(object =>
+                            //     ({
+                            //         id: port_id_for_commit_tree(object.oid),
+                            //         sources: [port_id_for_commit_tree(object.oid)],
+                            //         targets: [object.object.tree],
+                            //     })),
+                            // ...objects
+                            //     .filter(object => object.type === 'tag')
+                            //     .filter(object => object.object.type !== 'tag')
+                            //     .map(object => tag_edge(object)),
+                            ...outsideEdges,
                         ],
                     },
                     {
