@@ -160,7 +160,256 @@ if(METHOD === '9p')
                 async chmod() { throw new Error('unimplemented'); },
             }
         };
-        window.git = git;
         window.fs = fs;
+
+        const graphDiv = document.getElementById('graph');
+
+        const elk = new ELK({
+            'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+        });
+
+        setInterval(async () =>
+        {
+            const cache = {};
+            const oids = await Array.fromAsync(git.listAllObjects({ fs, cache, dir: '' }));
+            const objects = await Array.fromAsync(oids.map(oid => git.readObject({ fs, cache, oid, dir: '', format: 'parsed' })));
+            // const TYPES = ['tag', 'commit', 'tree', 'blob'];
+            const tree_entry_edge = (oid, treeEntry) =>
+            ({
+                id: port_id_for_tree_entry(oid, treeEntry),
+                sources: [port_id_for_tree_entry(oid, treeEntry)],
+                targets: [treeEntry.oid],
+            });
+            const tag_edge = object =>
+            ({
+                id: `${object.oid}-target`,
+                sources: [object.oid],
+                targets: [object.object.object],
+            });
+            const port_id_for_commit_tree = (oid) => `${oid}-tree`;
+            const port_id_for_commit_parent = (oid, parentIndex) => `${oid}-parent-${parentIndex}`;
+            const port_id_for_tree_entry = (oid, treeEntry) => `${oid}-${treeEntry.path}`;
+            // const PORTS_FOR_TYPE =
+            // {
+            //     blob: _ => [],
+            //     commit: object => [
+            //         {
+            //             id: port_id_for_commit_tree(object.oid),
+            //         },
+            //         ...object.object.parent.map((parent, parentindex) =>
+            //         ({
+            //             id: port_id_for_commit_parent(object.oid, parentindex),
+            //         })),
+            //     ],
+            //     tree: object => object.object.map(treeEntry =>
+            //     ({
+            //         id: port_id_for_tree_entry(object.oid, treeEntry),
+            //     })),
+            //     tag: object => [],
+            // };
+            // const EDGES_FOR_TYPE =
+            // {
+            //     blob: _ => [],
+            //     commit: object => [
+            //         {
+            //             id: port_id_for_commit_tree(object.oid),
+            //             sources: [port_id_for_commit_tree(object.oid)],
+            //             targets: [object.object.tree],
+            //         },
+            //         ...object.object.parent.map((parent, parentIndex) =>
+            //         ({
+            //             id: port_id_for_commit_parent(object.oid, parentIndex),
+            //             sources: [port_id_for_commit_parent(object.oid, parentIndex)],
+            //             targets: [parent],
+            //         })),
+            //     ],
+            //     tree: object => object.object.map(treeEntry =>
+            //     ({
+            //         id: port_id_for_tree_entry(object.oid, treeEntry),
+            //         sources: [port_id_for_tree_entry(object.oid, treeEntry)],
+            //         targets: [treeEntry.oid],
+            //     })),
+            //     tag: object =>
+            //     ({
+            //         id: `${object.oid}-target`,
+            //         sources: [object.oid],
+            //         targets: [object.object.object],
+            //     }),
+            // };
+            // const iota = length => [...Array(length)].map((_, i) => i);
+            const graph =
+            {
+                id: 'git',
+                layoutOptions: {
+                    'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+                    //'direction': 'RIGHT',
+                },
+                children: [
+                    {
+                        id: 'objects',
+                        layoutOptions: {
+                            //'direction': 'RIGHT',
+                        },
+                        children:
+                        [
+                            {
+                                id: 'tag',
+                                width: 100,
+                                layoutOptions: {
+                                    //'direction': 'DOWN',
+                                },
+                                children: objects
+                                    .filter(object => object.type === 'tag')
+                                    .map(object =>
+                                    ({
+                                        id: object.oid,
+                                        width: 100,
+                                        height: 100,
+                                    })),
+                                edges: objects
+                                    .filter(object => object.type === 'tag')
+                                    .filter(object => object.object.type === 'tag')
+                                    .map(object => tag_edge(object)),
+                            },
+                            {
+                                id: 'commit',
+                                width: 100,
+                                layoutOptions: {
+                                    //'direction': 'DOWN',
+                                },
+                                children: objects
+                                    .filter(object => object.type === 'commit')
+                                    .map(object =>
+                                    ({
+                                        id: object.oid,
+                                        width: 100,
+                                        height: 100,
+                                        ports: [
+                                            {
+                                                id: port_id_for_commit_tree(object.oid),
+                                            },
+                                            ...object.object.parent.map((parent, parentindex) =>
+                                            ({
+                                                id: port_id_for_commit_parent(object.oid, parentindex),
+                                            })),
+                                        ],
+                                    })),
+                                edges: objects
+                                    .filter(object => object.type === 'commit')
+                                    .flatMap(object => object.object.parent.map((parent, parentIndex) =>
+                                    ({
+                                        id: port_id_for_commit_parent(object.oid, parentIndex),
+                                        sources: [port_id_for_commit_parent(object.oid, parentIndex)],
+                                        targets: [parent],
+                                    }))),
+                            },
+                            {
+                                id: 'tree',
+                                width: 100,
+                                layoutOptions: {
+                                    //'direction': 'DOWN',
+                                },
+                                children: objects
+                                    .filter(object => object.type === 'tree')
+                                    .map(object =>
+                                    ({
+                                        id: object.oid,
+                                        width: 100,
+                                        height: 100,
+                                        ports: object.object.map(treeEntry =>
+                                        ({
+                                            id: port_id_for_tree_entry(object.oid, treeEntry),
+                                        })),
+                                    })),
+                                edges: objects
+                                    .filter(object => object.type === 'tree')
+                                    .flatMap(object => object.object
+                                        .filter(({ type }) => type === 'tree')
+                                        .map(treeEntry => tree_entry_edge(object.oid, treeEntry))
+                                    ),
+                            },
+                            {
+                                id: 'blob',
+                                width: 100,
+                                layoutOptions: {
+                                    //'direction': 'DOWN',
+                                },
+                                children: objects
+                                    .filter(object => object.type === 'blob')
+                                    .map(object =>
+                                    ({
+                                        id: object.oid,
+                                        width: 100,
+                                        height: 100,
+                                    })),
+                            },
+                        ],
+                        edges:
+                        [
+                            //...iota(TYPES.length - 1).map(i => (
+                            //    {
+                            //        id: `${TYPES[i]}-${TYPES[i + 1]}`,
+                            //        sources: [TYPES[i]],
+                            //        targets: [TYPES[i + 1]],
+                            //    }
+                            //)),
+
+                            ...objects
+                                .filter(({ type }) => type === 'tree')
+                                .flatMap(object => object.object
+                                    .filter(treeEntry => treeEntry.type !== 'tree')
+                                    .map(treeEntry => tree_entry_edge(object.oid, treeEntry))
+                                ),
+                            ...objects
+                                .filter(({ type }) => type === 'commit')
+                                .map(object =>
+                                ({
+                                    id: port_id_for_commit_tree(object.oid),
+                                    sources: [port_id_for_commit_tree(object.oid)],
+                                    targets: [object.object.tree],
+                                })),
+                            ...objects
+                                .filter(object => object.type === 'tag')
+                                .filter(object => object.object.type !== 'tag')
+                                .map(object => tag_edge(object)),
+                        ],
+                    },
+                    {
+                        id: 'refs',
+                    },
+                ],
+                //edges: objects.flatMap(object => EDGES_FOR_TYPE[object.type](object)),
+            };
+            window.graph = graph;
+            const graphWithLayout = await elk.layout(graph);
+
+            const toSvg = node => `
+                <g transform="translate(${node.x}, ${node.y})">
+                    <rect
+                        width=${node.width}
+                        height=${node.height}
+                        stroke="black"
+                        stroke-width="1"
+                        fill="none"
+                    />
+                    <text>${node.id.slice(0,7)}</text>
+                    ${node.children?.map(child => toSvg(child)).join('') ?? ''}
+                    ${node.edges?.flatMap(edge => edge.sections?.map(section => `
+                        <polyline
+                            stroke="black"
+                            stroke-width"1"
+                            fill="none"
+                            points="${[section.startPoint, ...(section.bendPoints ?? []), section.endPoint].map(point => `${point.x},${point.y}`).join(' ')}"
+                        />
+                    `) ?? []).join('') ?? ''}
+                </g>
+            `;
+
+            graphDiv.innerHTML = `
+                <svg width="${graphWithLayout.width}" height="${graphWithLayout.height}">
+                    ${toSvg(graphWithLayout)}
+                </svg>
+            `;
+        }, 300);
     })();
 }

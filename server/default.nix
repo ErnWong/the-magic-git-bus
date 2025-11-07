@@ -40,6 +40,10 @@
           url = "https://cdn.jsdelivr.net/npm/xterm@5.2.1/css/xterm.css";
           hash = "sha256-gy8/LGA7Q61DUf8ElwFQzHqHMBQnbbEmpgZcbdgeSHI=";
         }}" ./xterm.css
+        ln -s "${pkgs.fetchurl { # TODO Use npm the nix way
+          url = "https://cdn.jsdelivr.net/npm/elkjs@0.11.0/lib/elk.bundled.js";
+          hash = "sha256-y/YbAYLpCF023NWzkvV8yBYnMWmsQL3oC1K4CERMXPg=";
+        }}" ./elk.js
         ''
         +
         # TODO Package this properly
