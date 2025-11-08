@@ -372,6 +372,7 @@ if(METHOD === '9p')
                         labels: [label(".git/index", true)],
                         width: 100,
                         height: 100,
+                        fill: '#DDF',
                         fillHeight: true,
                         layoutOptions: {
                             'partitioning.partition': '0',
@@ -392,6 +393,7 @@ if(METHOD === '9p')
                             "elk.portConstraints": "FIXED_SIDE",
                             'partitioning.partition': '1',
                         },
+                        fill: '#DDD',
                         labels: [label(".git/objects", true)],
                         width: 100,
                         height: 100,
@@ -628,6 +630,7 @@ if(METHOD === '9p')
                         labels: [label(".git/refs", true)],
                         width: 100,
                         height: 100,
+                        fill: '#FDF',
                         fillHeight: true,
                         layoutOptions: {
                             'partitioning.partition': '2',
