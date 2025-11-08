@@ -55,6 +55,7 @@
         # TODO Package this properly
         ''
         cp client/isomorphic-git/index.umd.min.js ./isomorphic-git.js
+        cp client/isomorphic-git/index.umd.min.js.map ./
         ''
         #''
         #ln -s "${pkgs.fetchurl { # TODO Use npm the nix way
