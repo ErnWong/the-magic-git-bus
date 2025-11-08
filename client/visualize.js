@@ -322,8 +322,8 @@ export default async function visualize(objects, elk, refs, indexEntries)
             {
                 id: 'index',
                 labels: [label(".git/index", true)],
-                width: Math.max(...[...indexPorts.values()].map(port => port.labels[0].width)) + 10,
-                height: (indexPorts.size + 1) * LABEL_HEIGHT + 40,
+                width: Math.max(100, ...[...indexPorts.values()].map(port => port.labels[0].width)) + 10,
+                height: Math.max(100, (indexPorts.size + 1) * LABEL_HEIGHT + 40),
                 fill: '#DDF',
                 // fillHeight: true,
                 layoutOptions: {
