@@ -32,6 +32,10 @@
         ln -s "${vmStates.gitStates}/2-git-blobs.bin" ./images
         ln -s "${vmStates.gitStates}/3-git-trees.bin" ./images
         ln -s "${vmStates.gitStates}/4-git-commits.bin" ./images
+        ln -s "${vmStates.gitStates}/5-git-index.bin" ./images
+        ln -s "${vmStates.gitStates}/6-git-tags.bin" ./images
+        ln -s "${vmStates.gitStates}/7-git-branches.bin" ./images
+        ln -s "${vmStates.gitStates}/8-git-annotated-tags.bin" ./images
         ln -s "${pkgs.fetchurl { # TODO Use npm the nix way
           url = "https://cdn.jsdelivr.net/npm/xterm@5.2.1/lib/xterm.min.js";
           hash = "sha256-ZZr3ei46ADqAYwr6ktRTx/IVPVh8ti9goKoQttkdnzY=";

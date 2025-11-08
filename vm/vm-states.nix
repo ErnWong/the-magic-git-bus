@@ -62,6 +62,10 @@
           cp images/2-git-blobs.bin "$out"
           cp images/3-git-trees.bin "$out"
           cp images/4-git-commits.bin "$out"
+          cp images/5-git-index.bin "$out"
+          cp images/6-git-tags.bin "$out"
+          cp images/7-git-branches.bin "$out"
+          cp images/8-git-annotated-tags.bin "$out"
         '';
       };
     }

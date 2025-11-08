@@ -265,14 +265,21 @@ After which, we can generate a new tree out of the index:
 
 ```bash
 git write-tree
-# TODO resulting tree id
+# cfcb4ca1dbe0dbcfd99df397d57d2d6fe3853745
 
-git ls-tree -r TODOthattreeid
+git ls-tree -r cfcb4ca1dbe0dbcfd99df397d57d2d6fe3853745
 ```
 
 which is similar to what happens when you run `git commit` and it needs to generate the tree object for the commit.
 
 There's also `git read-tree` to read a tree into index.
+
+```bash
+git read-tree 486a17f
+git status
+git read-tree cfcb4ca
+git status
+```
 
 # Refs
 
@@ -298,6 +305,12 @@ And now we can refer to that commit using our tag name:
 git show mytag
 ```
 
+The handy command to do this is:
+
+```bash
+git tag another-tag 704cad9af
+```
+
 But, as you imagine, it's still quite inconvenient. It's useful to know what's our latest and current commit that we are working on, and the idea of tags don't really fit in here if we want a way to refer to the latest commit that will change every time we make a new commit.
 
 ## Heads (aka branches)
@@ -321,7 +334,7 @@ git show story
 Then we can plonk a ***symbolic ref*** called `.git/HEAD` in all capitals that point to which head we are currently working on.
 
 ```bash
-echo ref:refs/heads/master > .git/HEAD
+echo ref: refs/heads/story > .git/HEAD
 ```
 
 and now we can just do
@@ -333,16 +346,27 @@ git show
 And we can design our commands so that this kind of ref is automatically updated whenever we create a new commit while we're on a branch.
 
 ```bash
+echo ref: refs/heads/master > .git/HEAD
 cat .git/refs/heads/master
 # 704cad9af4578d8f3248fe4c4e044014322f1154
 echo new-content > newfile.txt
 git add newfile.txt
 git commit -m "Third commit"
 cat .git/refs/heads/master
-# Note the hash changed
+# a8df5619fbd04c68508c5bf887147a3a4116d3e3
 ```
 
 We have some convenience commands to handle these refs: `git update-ref` and `git symbolic-ref`. These also write to the reflogs: `.git/logs/HEAD` and `.git/logs/refs/*` so we can look back at the history in case we ever need to, using `git reflog`.
+
+## Annotated tags
+
+You might be wondering why there's a column called "tags" under objects in our visualizer. It's because a lightweight tag is a bit lackluster - sometimes we want something a bit more permanent and put a description and more metadata into a tag just like a commit.
+
+```bash
+git tag -a -m "This is an important commit" my-important-tag 704cad9af
+```
+
+
 
 # Merges
 

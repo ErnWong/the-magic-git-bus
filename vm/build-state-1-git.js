@@ -75,5 +75,40 @@ buildState({
         yield* run('git --no-pager show 704cad9af4578d8f3248fe4c4e044014322f1154');
 
         await save("4-git-commits.bin");
+
+        yield* run('git update-index --add --cacheinfo 100644,2e0996000b7e9019eabcad29391bf0f5c7702f0b,my/path/to/file.txt');
+        yield* run('git write-tree');
+        yield* run('git ls-tree -r cfcb4ca1dbe0dbcfd99df397d57d2d6fe3853745');
+        yield* run('git read-tree 486a17f');
+        yield* run('git status');
+        yield* run('git read-tree cfcb4ca');
+        yield* run('git status');
+
+        await save("5-git-index.bin");
+
+        yield* run('echo 704cad9af4578d8f3248fe4c4e044014322f1154 > .git/refs/tags/mytag');
+        yield* run('git update-ref refs/tags/mytag 704cad9');
+        yield* run('git --no-pager show mytag');
+
+        await save("6-git-tags.bin");
+
+        yield* run('echo 704cad9af4578d8f3248fe4c4e044014322f1154 > .git/refs/heads/master');
+        yield* run('git --no-pager show master');
+        yield* run('echo 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b > .git/refs/heads/story');
+        yield* run('git --no-pager show story');
+        yield* run('echo ref: refs/heads/story > .git/HEAD');
+        yield* run('git --no-pager show');
+        yield* run('echo ref: refs/heads/master > .git/HEAD');
+        yield* run('cat .git/refs/heads/master');
+        yield* run('echo new-content > newfile.txt');
+        yield* run('git add newfile.txt');
+        yield* run('git commit -m "Third commit"');
+        yield* run('cat .git/refs/heads/master');
+
+        await save("7-git-branches.bin");
+
+        yield* run('git tag -a -m "This is an important commit" my-important-tag 704cad9af');
+
+        await save("8-git-annotated-tags.bin");
     }
 });

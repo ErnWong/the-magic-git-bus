@@ -44,6 +44,26 @@ const states = [
         downloading: true,
         postLoadCommand: 'clear\n',
     },
+    {
+        name: '5-git-index',
+        downloading: true,
+        postLoadCommand: 'clear\n',
+    },
+    {
+        name: '6-git-tags',
+        downloading: true,
+        postLoadCommand: 'clear\n',
+    },
+    {
+        name: '7-git-branches',
+        downloading: true,
+        postLoadCommand: 'clear\n',
+    },
+    {
+        name: '8-git-annotated-tags',
+        downloading: true,
+        postLoadCommand: 'clear\n',
+    },
 ];
 let restoring_state = false;
 for(const state of states)
@@ -266,13 +286,13 @@ if(METHOD === '9p')
                     cssClass: `edge-from-${object.oid}`,
                 })),
                 tag: object =>
-                ({
+                [{
                     id: `${object.oid}-target`,
                     sources: [object.oid],
                     targets: [port_id_for_commit_from_tag(object.object.object)],
                     type: object.object.type,
                     cssClass: `edge-from-${object.oid}`,
-                }),
+                }],
             };
             const iota = length => [...Array(length)].map((_, i) => i);
             const outsideEdges = [];
