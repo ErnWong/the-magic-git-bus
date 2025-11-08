@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
     <head>
         <script src="https://cdn.jsdelivr.net/npm/elkjs@0.11.0/lib/elk.bundled.js"></script>
@@ -15,6 +16,38 @@
 
             const objects = [{"object":{"message":"My first commit\n","parent":[],"tree":"6db497f8ca5a8bf50591fd13beb12fc66dff1d31","author":{"name":"Waylon Smithers","email":"mr@smithers.invalid","timestamp":1762902000,"timezoneOffset":-780},"committer":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780}},"format":"parsed","source":"objects/02/cbc162b0a74f3cbb90c6c7bcf7387b3033015b","type":"commit","oid":"02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"},{"object":new Uint8Array({"0":109,"1":111,"2":100,"3":105,"4":102,"5":105,"6":101,"7":100,"8":10, length:9}),"format":"content","source":"objects/2e/0996000b7e9019eabcad29391bf0f5c7702f0b","type":"blob","oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b"},{"object":new Uint8Array({"0":102,"1":111,"2":111,"3":98,"4":97,"5":114,"6":10, length:7}),"format":"content","source":"objects/32/3fae03f4606ea9991df8befbb2fca795e648fa","type":"blob","oid":"323fae03f4606ea9991df8befbb2fca795e648fa"},{"object":new Uint8Array({"0":104,"1":101,"2":108,"3":108,"4":111,"5":32,"6":119,"7":111,"8":114,"9":108,"10":100,"11":10, length: 12}),"format":"content","source":"objects/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad"},{"object":[{"mode":"040000","path":"folder","oid":"974cd135eb6c4da9d3f14e1de564f76a8a07234e","type":"tree"},{"mode":"100644","path":"myfile.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"},{"mode":"100644","path":"otherfile.txt","oid":"323fae03f4606ea9991df8befbb2fca795e648fa","type":"blob"}],"format":"parsed","source":"objects/48/6a17fba0168a9242e39931c2b0233ada6a9671","type":"tree","oid":"486a17fba0168a9242e39931c2b0233ada6a9671"},{"object":[{"mode":"040000","path":"folder","oid":"8209f53524b4818a6d18424613de08c1c6552f11","type":"tree"},{"mode":"100644","path":"myfile.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"},{"mode":"100644","path":"otherfile.txt","oid":"323fae03f4606ea9991df8befbb2fca795e648fa","type":"blob"}],"format":"parsed","source":"objects/6d/b497f8ca5a8bf50591fd13beb12fc66dff1d31","type":"tree","oid":"6db497f8ca5a8bf50591fd13beb12fc66dff1d31"},{"object":{"message":"Second commit!\n","parent":["02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"],"tree":"486a17fba0168a9242e39931c2b0233ada6a9671","author":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780},"committer":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780}},"format":"parsed","source":"objects/70/4cad9af4578d8f3248fe4c4e044014322f1154","type":"commit","oid":"704cad9af4578d8f3248fe4c4e044014322f1154"},{"object":[{"mode":"100644","path":"copy.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"}],"format":"parsed","source":"objects/82/09f53524b4818a6d18424613de08c1c6552f11","type":"tree","oid":"8209f53524b4818a6d18424613de08c1c6552f11"},{"object":[{"mode":"100644","path":"copy.txt","oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b","type":"blob"}],"format":"parsed","source":"objects/97/4cd135eb6c4da9d3f14e1de564f76a8a07234e","type":"tree","oid":"974cd135eb6c4da9d3f14e1de564f76a8a07234e"}];
 
+            const objectById = new Map(objects.map(object => [object.oid, object]));
+
+            const forwardEdges = object => ({
+                blob: () => [],
+                tree: () => object.object.map(treeEntry => treeEntry.oid),
+                commit: () => [
+                    object.object.tree,
+                    ...object.object.parent,
+                ],
+                tag: () => [object.object.object],
+            })[object.type]();
+            const backwardEdges = new Map();
+            for(const object of objects) {
+                for(const targetId of forwardEdges(object)) {
+                    const edges = backwardEdges.get(targetId) ?? [];
+                    edges.push(object.oid);
+                    backwardEdges.set(targetId, edges);
+                }
+            }
+            const reachableToOid = new Map();
+            const reachableTo = oid => {
+                if (reachableToOid.has(oid)) return reachableToOid.get(oid);
+                const reachable = new Set([
+                    oid,
+                    ...(backwardEdges.get(oid) ?? []).flatMap(x => [
+                        x,
+                        ...reachableTo(x),
+                    ])
+                ]);
+                reachableToOid.set(oid, reachable);
+                return reachable;
+            };
 
             const TYPES = ['tag', 'commit', 'tree', 'blob'];
             const port_id_for_incoming = (oid) => `${oid}-in`;
@@ -90,6 +123,7 @@
                         sources: [port_id_for_commit_tree(object.oid)],
                         targets: [port_id_for_incoming(object.object.tree)],
                         type: 'tree',
+                        cssClass: `edge-from-${object.oid}`,
                     },
                     ...object.object.parent.map((parent, parentIndex) =>
                     ({
@@ -97,6 +131,7 @@
                         sources: [port_id_for_commit_parent(object.oid, parentIndex)],
                         targets: [port_id_for_incoming(parent)],
                         type: 'commit',
+                        cssClass: `edge-from-${object.oid}`,
                     })),
                 ],
                 tree: object => object.object.map(treeEntry =>
@@ -105,6 +140,7 @@
                     sources: [port_id_for_tree_entry(object.oid, treeEntry)],
                     targets: [port_id_for_incoming(treeEntry.oid)],
                     type: treeEntry.type,
+                    cssClass: `edge-from-${object.oid}`,
                 })),
                 tag: object =>
                 ({
@@ -112,6 +148,7 @@
                     sources: [object.oid],
                     targets: [port_id_for_commit_from_tag(object.object.object)],
                     type: object.object.type,
+                    cssClass: `edge-from-${object.oid}`,
                 }),
             };
             const iota = length => [...Array(length)].map((_, i) => i);
@@ -139,18 +176,24 @@
                                 'elk.port.side': sourceSide,
                                 "elk.portConstraints": "FIXED_SIDE",
                             },
+                            cssId: edge.cssId,
+                            cssClass: edge.cssClass,
                         });
                         edgeInfoPerType[object.type].edges.push({
                             id: `${edge.sources[0]}-type-source-port-edge`,
                             sources: edge.sources,
                             targets: [sourcePortId],
                             isEnd: false,
+                            cssId: edge.cssId,
+                            cssClass: edge.cssClass,
                         });
                         outsideEdges.push({
                             id: `${edge.id}-outside`,
                             sources: [sourcePortId],
                             targets: [targetPortId],
                             isEnd: false,
+                            cssId: edge.cssId,
+                            cssClass: edge.cssClass,
                         });
                         edgeInfoPerType[edge.type].ports.set(targetPortId, {
                             id: targetPortId,
@@ -158,12 +201,16 @@
                                 'elk.port.side': targetSide,
                                 "elk.portConstraints": "FIXED_SIDE",
                             },
+                            cssId: edge.cssId,
+                            cssClass: edge.cssClass,
                         });
                         edgeInfoPerType[edge.type].edges.push({
                             id: `${edge.targets[0]}-type-target-port-edge`,
                             sources: [targetPortId],
                             targets: edge.targets,
                             isEnd: true,
+                            cssId: edge.cssId,
+                            cssClass: edge.cssClass,
                         });
                     }
                 }
@@ -269,6 +316,8 @@
                                         width: 100,
                                         height: 100,
                                         fill: 'green',
+                                        cssId: 'object-' + object.oid,
+                                        cssClass: 'object',
                                         labels: [label(object.oid.slice(0, 7))],
                                         ports: [{
                                             id: port_id_for_incoming(object.oid),
@@ -299,6 +348,8 @@
                                         width: label([...Array(COMMIT_MAX_CHARS).join(' ')]).width + 20,
                                         height: label([...Array(COMMIT_MAX_CHARS).join(' ')]).height * 2 + 20,
                                         fill: 'yellow',
+                                        cssId: 'object-' + object.oid,
+                                        cssClass: 'object',
                                         layoutOptions: {
                                             "elk.portConstraints": "FIXED_SIDE",
                                         },
@@ -366,6 +417,8 @@
                                             fill: '#FAA',
                                             width: width + 10,
                                             height: totalHeight + 20,
+                                            cssId: 'object-' + object.oid,
+                                            cssClass: 'object',
                                             layoutOptions: {
                                                 "elk.portConstraints": "FIXED_ORDER",
                                                 'portLabels.placement': "[INSIDE]",
@@ -426,6 +479,8 @@
                                         width: label([...Array(BLOB_MAX_CHARS).join(' ')]).width + 20,
                                         height: label([...Array(BLOB_MAX_CHARS).join(' ')]).height * 2 + 20,
                                         fill: 'cyan',
+                                        cssId: 'object-' + object.oid,
+                                        cssClass: 'object',
 
                                         labels: [label(object.oid.slice(0, 7).padEnd(BLOB_MAX_CHARS)), label(decoder.decode(object.object).slice(0, BLOB_MAX_CHARS).padEnd(BLOB_MAX_CHARS))],
                                         ports: [{
@@ -525,61 +580,91 @@
                 const FILL_Y_PADDING_BOTTOM = 10;
 
                 const toSvg = (node, parent, fillXOffset, fillYOffset) => `
-                    <g transform="translate(${node.fillWidth ? FILL_X_PADDING - fillXOffset : node.x}, ${node.fillHeight ? FILL_Y_PADDING_TOP - fillYOffset : node.y})">
-                        <rect
-                            width=${node.fillWidth ? parent?.width - 2 * FILL_X_PADDING ?? node.width : node.width}
-                            height=${node.fillHeight ? parent?.height - FILL_Y_PADDING_TOP - FILL_Y_PADDING_BOTTOM ?? node.height : node.height}
-                            stroke="black"
-                            stroke-width="1"
-                            fill="${node.fill ?? 'white'}"
-                            style="filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.5))"
-                        />
-                        ${node.labels?.map(label => `
-                            ${label.box ? `
-                                <rect
-                                    x=${label.isContainer ? 0 : label.x}
-                                    y=${label.isContainer ? 0 : label.y}
-                                    width=${label.isContainer ?
-                                        (node.fillWidth ? parent?.width - 2 * FILL_X_PADDING ?? node.width : node.width)
-                                        : label.width}
-                                    height=${label.isContainer ? label.y * 2 + label.height : label.height}
-                                    stroke="black"
-                                    stroke-width="1"
-                                    fill="${label.isContainer ? 'black' : 'white'}"
-                                />
-                            ` : ''}
-                            <text style='font: ${textMeasurer.font}; fill: ${label.isContainer ? 'white' : 'black'}' x="${label.x + label.width / 2}" y="${label.y + label.height / 2}" text-anchor="middle" dominant-baseline="middle">${label.text ?? ''}</text>
-                        `).join('') ?? ''}
-                    </g>
-                    <g transform="translate(${node.x}, ${node.y})">
-                        ${node.children?.map(child => toSvg(child, node, node.fillWidth ? node.x - FILL_X_PADDING + fillXOffset : 0, node.fillHeight ? node.y - FILL_Y_PADDING_TOP + fillYOffset : 0)).join('') ?? ''}
-                        ${node.ports?.map(child => toSvg(child, node, node.fillWidth ? node.x - FILL_X_PADDING + fillXOffset : 0, node.fillHeight ? node.y - FILL_Y_PADDING_TOP + fillYOffset : 0)).join('') ?? ''}
-                        ${node.edges?.filter(edge => !edge.hidden).map(edge => `
-                            ${edge.sections?.map(section => `
-                                <polyline
-                                    stroke="black"
-                                    stroke-width="1"
-                                    fill="none"
-                                    ${edge.isEnd ? `marker-end="url(#arrow)"` : ''}
-                                    points="${[section.startPoint, ...(section.bendPoints ?? []), section.endPoint].map(point => `${point.x},${point.y}`).join(' ')}"
-                                />
+                    <g
+                        ${node.cssClass ? `class="${node.cssClass}"` : ''}
+                        ${node.cssId ? `id="${node.cssId}"` : ''}
+                    >
+                        <g transform="translate(${node.fillWidth ? FILL_X_PADDING - fillXOffset : node.x}, ${node.fillHeight ? FILL_Y_PADDING_TOP - fillYOffset : node.y})">
+                            <rect
+                                width=${node.fillWidth ? parent?.width - 2 * FILL_X_PADDING ?? node.width : node.width}
+                                height=${node.fillHeight ? parent?.height - FILL_Y_PADDING_TOP - FILL_Y_PADDING_BOTTOM ?? node.height : node.height}
+                                stroke="black"
+                                stroke-width="1"
+                                fill="${node.fill ?? 'white'}"
+                                style="filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.5))"
+                            />
+                            ${node.labels?.map(label => `
+                                ${label.box ? `
+                                    <rect
+                                        x=${label.isContainer ? 0 : label.x}
+                                        y=${label.isContainer ? 0 : label.y}
+                                        width=${label.isContainer ?
+                                            (node.fillWidth ? parent?.width - 2 * FILL_X_PADDING ?? node.width : node.width)
+                                            : label.width}
+                                        height=${label.isContainer ? label.y * 2 + label.height : label.height}
+                                        stroke="black"
+                                        stroke-width="1"
+                                        fill="${label.isContainer ? 'black' : 'white'}"
+                                    />
+                                ` : ''}
+                                <text style='font: ${textMeasurer.font}; fill: ${label.isContainer ? 'white' : 'black'}' x="${label.x + label.width / 2}" y="${label.y + label.height / 2}" text-anchor="middle" dominant-baseline="middle">${label.text ?? ''}</text>
                             `).join('') ?? ''}
-                            ${edge.junctionPoints?.map(junction => `
-                                <circle
-                                    cx=${junction.x}
-                                    cy=${junction.y}
-                                    r="3"
-                                    fill="black"
-                                />
+                        </g>
+                        <g transform="translate(${node.x}, ${node.y})">
+                            ${node.children?.map(child => toSvg(child, node, node.fillWidth ? node.x - FILL_X_PADDING + fillXOffset : 0, node.fillHeight ? node.y - FILL_Y_PADDING_TOP + fillYOffset : 0)).join('') ?? ''}
+                            ${node.ports?.map(child => toSvg(child, node, node.fillWidth ? node.x - FILL_X_PADDING + fillXOffset : 0, node.fillHeight ? node.y - FILL_Y_PADDING_TOP + fillYOffset : 0)).join('') ?? ''}
+                            ${node.edges?.filter(edge => !edge.hidden).map(edge => `
+                                ${edge.sections?.map(section => `
+                                    <polyline
+                                        stroke="black"
+                                        stroke-width="1"
+                                        fill="none"
+                                        ${edge.cssClass ? `class="${edge.cssClass}"` : ''}
+                                        ${edge.cssId ? `id="${edge.cssId}"` : ''}
+                                        ${edge.isEnd ? `marker-end="url(#arrow)"` : ''}
+                                        points="${[section.startPoint, ...(section.bendPoints ?? []), section.endPoint].map(point => `${point.x},${point.y}`).join(' ')}"
+                                    />
+                                `).join('') ?? ''}
+                                ${edge.junctionPoints?.map(junction => `
+                                    <circle
+                                        ${edge.cssClass ? `class="${edge.cssClass}"` : ''}
+                                        ${edge.cssId ? `id="${edge.cssId}"` : ''}
+                                        cx=${junction.x}
+                                        cy=${junction.y}
+                                        r="3"
+                                        fill="black"
+                                    />
+                                `).join('') ?? ''}
                             `).join('') ?? ''}
-                        `).join('') ?? ''}
+                        </g>
                     </g>
                 `;
 
                 document.getElementById('graph').innerHTML = `
+                    <style>
+                        ${objects.map(object => `
+                            #graph:has(.object:hover):not(:has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')}))) #object-${object.oid} {
+                                opacity: 0.2;
+                            }
+                            #graph:has(.object:hover):has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')})) #object-${object.oid} > g > rect {
+                                stroke: blue;
+                                stroke-width: 2px;
+                            }
+                            #graph:has(.object:hover):not(:has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')}))) .edge-from-${object.oid} {
+                                opacity: 0.2;
+                            }
+                            #graph:has(.object:hover):has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')})) polyline.edge-from-${object.oid} {
+                                stroke: blue;
+                                stroke-width: 2px;
+                            }
+                            #graph:has(.object:hover):has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')})) circle.edge-from-${object.oid} {
+                                fill: blue;
+                            }
+                        `).join('\n')}
+                    </style>
                     <svg width="${graphWithLayout.width + 20}" height="${graphWithLayout.height + 20}">
                         <defs>
-                            <marker id="arrow" viewBox="-5 0 5 10" orient="auto-start-reverse" refX="5" refY="5" markerWidth="8" markerHeight="8">
+                            <marker id="arrow" viewBox="-5 0 5 10" orient="auto-start-reverse" refX="5" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse">
                                 <path d="M -5 0 L 5 5 L -5 10 z" fill="black" />
                             </marker>
                         </defs>
