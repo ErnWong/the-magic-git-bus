@@ -6,10 +6,17 @@ const METHOD = '9p'; // '9p' | 'inotify'
 
 const emulator = new V86({
     ...vmConfig,
-    initial_state: { url: toV86Url(new URL("0-login.bin", IMAGES_DIR)) },
+    initial_state: { url: toV86Url(new URL("1-git-init.bin", IMAGES_DIR)) },
     serial_container_xtermjs: document.getElementById('vm'),
 });
 window.emulator = emulator;
+
+emulator.add_listener("emulator-started", () => {
+    // Why isn't setOption defined?
+    emulator.serial_adapter.term._publicOptions.fontFamily = '"Fixedsys Excelsior 3.01"';
+    emulator.serial_adapter.term._publicOptions.fontSize = 16;
+    emulator.serial0_send('clear\n');
+});
 
 const states = [
     {
@@ -43,10 +50,15 @@ for(const state of states)
 {
     const button = document.createElement('button');
     button.textContent = state.name;
+    let started = emulator.cpu_is_running;
     function update()
     {
-        button.disabled = state.downloading || restoring_state;
+        button.disabled = state.downloading || restoring_state || !started;
     }
+    emulator.add_listener("emulator-started", () => {
+        started = true;
+        update();
+    });
     button.disabled = true;
     (async () => {
         const buffer = await (await fetch(new URL(`${state.name}.bin`, IMAGES_DIR))).arrayBuffer();
