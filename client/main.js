@@ -207,6 +207,7 @@ if(METHOD === '9p')
             const cache = {};
             const oids = await Array.fromAsync(git.listAllObjects({ fs, cache, dir: '' }));
             const objects = await Array.fromAsync(oids.map(oid => git.readObject({ fs, cache, oid, dir: '', format: 'parsed' })));
+            const objectById = new Map(objects.map(object => [object.oid, object]));
             const pathExists = path => emulator.fs9p.SearchPath(path).id !== -1;
             const refs = await Array.fromAsync([
                 ...(pathExists('.git/HEAD') ? ['HEAD'] : []), // Ideally we should catch error later to avoid race, but I can't seem to catch error.
@@ -214,7 +215,10 @@ if(METHOD === '9p')
             ]
                 .map(async ref => ({
                     ref,
-                    target: await git.resolveRef({ fs, dir: '', ref, depth: 1 }),
+                    ...(oid => ({
+                        target: oid,
+                        type: objectById.get(oid)?.type ?? null,
+                    }))(await git.resolveRef({ fs, dir: '', ref, depth: 1 })),
                 })));
             const indexEntries = pathExists('.git/index') ? await git.listFiles({ fs, cache, dir: '', fullEntry: true }) : [];
 

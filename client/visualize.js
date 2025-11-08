@@ -34,6 +34,7 @@ export default async function visualize(objects, elk, refs, indexEntries)
 
     const TYPES = ['tag', 'commit', 'tree', 'blob'];
     const port_id_for_incoming = (oid) => `${oid}-in`;
+    const port_id_for_incoming_index_to_blob = (oid) => `${oid}-in-blob`;
     const port_id_for_commit_from_tag = (oid) => `${oid}-in-tag`;
     const port_id_for_commit_tree = (oid) => `${oid}-tree`;
     const port_id_for_commit_parent = (oid, parentIndex) => `${oid}-parent-${parentIndex}`;
@@ -77,78 +78,35 @@ export default async function visualize(objects, elk, refs, indexEntries)
         }],
     };
     const iota = length => [...Array(length)].map((_, i) => i);
-    const outsideEdges = [];
+    const outsideEdges = new Map();
     const edgeInfoPerType = Object.fromEntries(TYPES.map(type => [type, {
-        edges: [],
+        edges: new Map(),
         ports: new Map(),
     }]));
+    const refPorts = new Map();
+    const refEdges = new Map();
+    const indexPorts = new Map();
+    const objectPorts = new Map();
+    const rootEdges = new Map();
 
-    for (const object of objects) {
-        for (const edge of EDGES_FOR_TYPE[object.type](object)) {
-            if(edge.type === object.type) {
-                edgeInfoPerType[object.type].edges.push({
-                    ...edge,
-                    isEnd: true,
-                });
-            } else {
-                const sourceSide = TYPES.indexOf(object.type) < TYPES.indexOf(edge.type) ? 'EAST' : 'WESET';
-                const sourcePortId = `${edge.sources[0]}-type-source-port-${sourceSide}`;
-                const targetSide = TYPES.indexOf(object.type) < TYPES.indexOf(edge.type) ? 'WEST' : 'EAST';
-                const targetPortId = `${edge.targets[0]}-type-target-port-${targetSide}`;
-                edgeInfoPerType[object.type].ports.set(sourcePortId, {
-                    id: sourcePortId,
-                    layoutOptions: {
-                        'elk.port.side': sourceSide,
-                        "elk.portConstraints": "FIXED_SIDE",
-                    },
-                    cssId: edge.cssId,
-                    cssClass: edge.cssClass,
-                });
-                edgeInfoPerType[object.type].edges.push({
-                    id: `${edge.sources[0]}-type-source-port-edge`,
-                    sources: edge.sources,
-                    targets: [sourcePortId],
-                    isEnd: false,
-                    cssId: edge.cssId,
-                    cssClass: edge.cssClass,
-                });
-                outsideEdges.push({
-                    id: `${edge.id}-outside`,
-                    sources: [sourcePortId],
-                    targets: [targetPortId],
-                    isEnd: false,
-                    cssId: edge.cssId,
-                    cssClass: edge.cssClass,
-                });
-                edgeInfoPerType[edge.type].ports.set(targetPortId, {
-                    id: targetPortId,
-                    layoutOptions: {
-                        'elk.port.side': targetSide,
-                        "elk.portConstraints": "FIXED_SIDE",
-                    },
-                    cssId: edge.cssId,
-                    cssClass: edge.cssClass,
-                });
-                edgeInfoPerType[edge.type].edges.push({
-                    id: `${edge.targets[0]}-type-target-port-edge`,
-                    sources: [targetPortId],
-                    targets: edge.targets,
-                    isEnd: true,
-                    cssId: edge.cssId,
-                    cssClass: edge.cssClass,
-                });
-            }
+    function addPortOrEdge(map, toAdd) {
+        // toAdd.labels = [...(toAdd.labels ?? []), label(toAdd.id)].toReversed();
+        if(map.has(toAdd.id)) {
+            map.get(toAdd.id).cssClass += ' ' + toAdd.cssClass;
+        } else {
+            map.set(toAdd.id, toAdd);
         }
     }
 
     const textMeasurer = document.createElement("canvas").getContext("2d");
     textMeasurer.font = `16px 'Fixedsys Excelsior 3.01'`;
     const charWidth = textMeasurer.measureText('A').width;
+    const LABEL_HEIGHT = 20;
 
     const label = (text, isContainer=false) => ({
         text,
         width: charWidth * (text.length + 2),
-        height: 20,
+        height: LABEL_HEIGHT,
         "layoutOptions": {
             "nodeLabels.placement": `[H_CENTER, ${isContainer ? 'V_TOP' : 'V_CENTER'}, INSIDE]`,
         },
@@ -156,8 +114,191 @@ export default async function visualize(objects, elk, refs, indexEntries)
         box: true,
     });
 
+    for (const object of objects) {
+        for (const edge of EDGES_FOR_TYPE[object.type](object)) {
+            if(edge.type === object.type) {
+                addPortOrEdge(edgeInfoPerType[object.type].edges, {
+                    ...edge,
+                    isEnd: true,
+                });
+            } else {
+                const sourceSide = TYPES.indexOf(object.type) < TYPES.indexOf(edge.type) ? 'EAST' : 'WEST';
+                const sourcePortId = `${edge.sources[0]}-type-source-port-${sourceSide}`;
+                const targetSide = TYPES.indexOf(object.type) < TYPES.indexOf(edge.type) ? 'WEST' : 'EAST';
+                const targetPortId = `${edge.targets[0]}-type-target-port-${targetSide}`;
+                addPortOrEdge(edgeInfoPerType[object.type].ports, {
+                    id: sourcePortId,
+                    layoutOptions: {
+                        'elk.port.side': sourceSide,
+                        "elk.portConstraints": "FIXED_SIDE",
+                    },
+                    cssClass: edge.cssClass,
+                });
+                addPortOrEdge(edgeInfoPerType[object.type].edges, {
+                    id: `${edge.sources[0]}-${sourcePortId}-edge`,
+                    sources: edge.sources,
+                    targets: [sourcePortId],
+                    isEnd: false,
+                    cssClass: edge.cssClass,
+                });
+                addPortOrEdge(outsideEdges, {
+                    id: `${sourcePortId}-${targetPortId}-edge`,
+                    sources: [sourcePortId],
+                    targets: [targetPortId],
+                    isEnd: false,
+                    cssClass: edge.cssClass,
+                });
+                addPortOrEdge(edgeInfoPerType[edge.type].ports, {
+                    id: targetPortId,
+                    layoutOptions: {
+                        'elk.port.side': targetSide,
+                        "elk.portConstraints": "FIXED_SIDE",
+                    },
+                    cssClass: edge.cssClass,
+                });
+                addPortOrEdge(edgeInfoPerType[edge.type].edges, {
+                    id: `${targetPortId}-${edge.targets[0]}-edge`,
+                    sources: [targetPortId],
+                    targets: edge.targets,
+                    isEnd: true,
+                    cssClass: edge.cssClass,
+                });
+            }
+        }
+    }
+
+    let has_ref_object_edge = false;
+
+    for(const {ref, target, type} of refs)
+    {
+        const cssClass = `edge-from-ref-${ref}`;
+        if (target.startsWith("ref: ")) {
+            // Symbolic ref
+            const targetRef = target.replace(/^ref: /, '');
+            // Don't add if it's dangling.
+            if (refs.find(ref => ref.ref === targetRef)) {
+                addPortOrEdge(refEdges, {
+                    id: `${ref}-symbolic-edge`,
+                    sources: [ref],
+                    targets: [targetRef],
+                    isEnd: true,
+                    cssClass,
+                });
+            }
+        } else {
+            has_ref_object_edge = true;
+            const refPortId = `${ref}-port`;
+            const targetPortId = port_id_for_incoming(target);
+            addPortOrEdge(refPorts, {
+                id: refPortId,
+                layoutOptions: {
+                    'elk.port.side': 'EAST',
+                },
+                cssClass,
+            });
+            const objectPortId = `${target}-to-ref-port`;
+            addPortOrEdge(objectPorts, {
+                id: objectPortId,
+                layoutOptions: {
+                    'elk.port.side': 'WEST',
+                },
+                cssClass,
+            });
+            const objectTypePortId = `${target}-type-target-port-WEST`;
+            addPortOrEdge(edgeInfoPerType[type].ports, {
+                id: objectTypePortId,
+                layoutOptions: {
+                    'elk.port.side': 'WEST',
+                },
+                cssClass,
+            });
+            addPortOrEdge(refEdges, {
+                id: `${ref}-${refPortId}-edge`,
+                sources: [ref],
+                targets: [refPortId],
+                isEnd: false,
+                cssClass,
+            });
+            addPortOrEdge(rootEdges, {
+                id: `${refPortId}-${objectPortId}-edge`,
+                sources: [refPortId],
+                targets: [objectPortId],
+                isEnd: false,
+                cssClass,
+            });
+            addPortOrEdge(outsideEdges, {
+                id: `${objectPortId}-${objectTypePortId}-edge`,
+                sources: [objectPortId],
+                targets: [objectTypePortId],
+                isEnd: false,
+                cssClass,
+            });
+            addPortOrEdge(edgeInfoPerType[type].edges, {
+                id: `${objectTypePortId}-${targetPortId}-edge`,
+                sources: [objectTypePortId],
+                targets: [targetPortId],
+                isEnd: true,
+                cssClass,
+            });
+        }
+    }
+    let has_index_object_edge = false;
+    for(const {path, oid} of indexEntries)
+    {
+        has_index_object_edge = true;
+        const cssClass = `edge-from-index-${path}`;
+        const indexPortId = `${path}-index-port`;
+        addPortOrEdge(indexPorts, {
+            id: indexPortId,
+            labels: [label(path)],
+            layoutOptions: {
+                'elk.port.side': 'WEST',
+            },
+            cssClass,
+        });
+        const objectPortId = `${oid}-index-object-port`;
+        addPortOrEdge(objectPorts, {
+            id: objectPortId,
+            layoutOptions: {
+                'elk.port.side': 'EAST',
+            },
+            cssClass,
+        });
+        const blobPortId = `${oid}-index-blob-port`;
+        addPortOrEdge(edgeInfoPerType.blob.ports, {
+            id: blobPortId,
+            layoutOptions: {
+                'elk.port.side': 'EAST',
+            },
+            cssClass,
+        });
+        addPortOrEdge(rootEdges, {
+            id: `${indexPortId}-${objectPortId}-edge`,
+            sources: [indexPortId],
+            targets: [objectPortId],
+            isEnd: false,
+            cssClass,
+        });
+        addPortOrEdge(outsideEdges, {
+            id: `${objectPortId}-${blobPortId}-edge`,
+            sources: [objectPortId],
+            targets: [blobPortId],
+            isEnd: false,
+            cssClass,
+        });
+        const targetPortId = port_id_for_incoming_index_to_blob(oid);
+        addPortOrEdge(edgeInfoPerType.blob.edges, {
+            id: `${blobPortId}-${targetPortId}-edge`,
+            sources: [blobPortId],
+            targets: [targetPortId],
+            isEnd: true,
+            cssClass,
+        });
+    }
+
     const BLOB_MAX_CHARS = 30;
     const COMMIT_MAX_CHARS = 20;
+    const TAG_MAX_CHARS = 20;
 
     const graph =
     {
@@ -172,20 +313,34 @@ export default async function visualize(objects, elk, refs, indexEntries)
             {
                 id: 'index',
                 labels: [label(".git/index", true)],
-                width: 100,
-                height: 100,
+                width: Math.max(...[...indexPorts.values()].map(port => port.labels[0].width)) + 10,
+                height: (indexPorts.size + 1) * LABEL_HEIGHT + 40,
                 fill: '#DDF',
-                fillHeight: true,
+                // fillHeight: true,
                 layoutOptions: {
                     'partitioning.partition': '0',
+                    'portLabels.placement': "[INSIDE]",
+                    "elk.portConstraints": "FIXED_ORDER",
                 },
                 ports: [
+                    ...[...indexPorts.values()].map(port => ({
+                        ...port,
+                        labels: [{
+                            ...port.labels[0],
+                            width: Math.max(...[...indexPorts.values()].map(port => port.labels[0].width)),
+                        }]
+                    })),
                     {
                         id: 'index-left',
                         layoutOptions: {
                             "elk.port.side": "WEST",
                         },
-                    }
+                        labels: [{
+                            text: ' ',
+                            height: 40,
+                            width: 0,
+                        }]
+                    },
                 ],
             },
             {
@@ -199,7 +354,7 @@ export default async function visualize(objects, elk, refs, indexEntries)
                 labels: [label(".git/objects", true)],
                 width: 100,
                 height: 100,
-                fillHeight: true,
+                // fillHeight: true,
                 ports: [
                     {
                         id: 'objects-left',
@@ -213,6 +368,7 @@ export default async function visualize(objects, elk, refs, indexEntries)
                             "elk.port.side": "EAST",
                         },
                     },
+                    ...objectPorts.values(),
                 ],
                 children:
                 [
@@ -220,7 +376,7 @@ export default async function visualize(objects, elk, refs, indexEntries)
                         id: 'tag',
                         width: 100,
                         height: 100,
-                        fillHeight: true,
+                        // fillHeight: true,
                         layoutOptions: {
                             'elk.direction': 'DOWN',
                             "elk.portConstraints": "FIXED_SIDE",
@@ -232,12 +388,15 @@ export default async function visualize(objects, elk, refs, indexEntries)
                             .map(object =>
                             ({
                                 id: object.oid,
-                                width: 100,
-                                height: 100,
+                                width: charWidth * TAG_MAX_CHARS + 40,
+                                height: LABEL_HEIGHT * 2 + 20,
                                 fill: 'green',
                                 cssId: 'object-' + object.oid,
                                 cssClass: 'object',
-                                labels: [label(object.oid.slice(0, 7))],
+                                labels: [
+                                    label(object.oid.slice(0, 7).padEnd(TAG_MAX_CHARS)),
+                                    label(object.object.message.slice(0,TAG_MAX_CHARS).padEnd(TAG_MAX_CHARS)),
+                                ],
                                 ports: [{
                                     id: port_id_for_incoming(object.oid),
                                     layoutOptions: {
@@ -245,14 +404,14 @@ export default async function visualize(objects, elk, refs, indexEntries)
                                     },
                                 }],
                             })),
-                        edges: edgeInfoPerType.tag.edges,
+                        edges: [...edgeInfoPerType.tag.edges.values()],
                         ports: [...edgeInfoPerType.tag.ports.values()],
                     },
                     {
                         id: 'commit',
                         width: 100,
                         height: 100,
-                        fillHeight: true,
+                        // fillHeight: true,
                         layoutOptions: {
                             'elk.direction': 'UP',
                             "elk.portConstraints": "FIXED_SIDE",
@@ -304,14 +463,14 @@ export default async function visualize(objects, elk, refs, indexEntries)
                                     })),
                                 ],
                             })),
-                        edges: edgeInfoPerType.commit.edges,
+                        edges: [...edgeInfoPerType.commit.edges.values()],
                         ports: [...edgeInfoPerType.commit.ports.values()],
                     },
                     {
                         id: 'tree',
                         width: 100,
                         height: 100,
-                        fillHeight: true,
+                        // fillHeight: true,
                         layoutOptions: {
                             'elk.direction': 'RIGHT',
                             "elk.portConstraints": "FIXED_SIDE",
@@ -376,14 +535,14 @@ export default async function visualize(objects, elk, refs, indexEntries)
                                     ],
                                 };
                             }),
-                        edges: edgeInfoPerType.tree.edges,
+                        edges: [...edgeInfoPerType.tree.edges.values()],
                         ports: [...edgeInfoPerType.tree.ports.values()],
                     },
                     {
                         id: 'blob',
                         width: 100,
                         height: 100,
-                        fillHeight: true,
+                        // fillHeight: true,
                         layoutOptions: {
                             'elk.direction': 'LEFT',
                             "elk.portConstraints": "FIXED_SIDE",
@@ -402,14 +561,22 @@ export default async function visualize(objects, elk, refs, indexEntries)
                                 cssClass: 'object',
 
                                 labels: [label(object.oid.slice(0, 7).padEnd(BLOB_MAX_CHARS)), label(decoder.decode(object.object).slice(0, BLOB_MAX_CHARS).padEnd(BLOB_MAX_CHARS))],
-                                ports: [{
-                                    id: port_id_for_incoming(object.oid),
-                                    layoutOptions: {
-                                        "elk.port.side": "WEST",
+                                ports: [
+                                    {
+                                        id: port_id_for_incoming(object.oid),
+                                        layoutOptions: {
+                                            "elk.port.side": "WEST",
+                                        },
                                     },
-                                }],
+                                    {
+                                        id: port_id_for_incoming_index_to_blob(object.oid),
+                                        layoutOptions: {
+                                            "elk.port.side": "EAST",
+                                        },
+                                    },
+                                ],
                             })),
-                        edges: edgeInfoPerType.blob.edges,
+                        edges: [...edgeInfoPerType.blob.edges.values()],
                         ports: [...edgeInfoPerType.blob.ports.values()],
                     },
                 ],
@@ -424,7 +591,7 @@ export default async function visualize(objects, elk, refs, indexEntries)
                         }
                     )),
 
-                    ...outsideEdges,
+                    ...outsideEdges.values(),
                 ],
             },
             {
@@ -433,18 +600,26 @@ export default async function visualize(objects, elk, refs, indexEntries)
                 width: 100,
                 height: 100,
                 fill: '#FDF',
-                fillHeight: true,
+                // fillHeight: true,
                 layoutOptions: {
                     'partitioning.partition': '2',
                 },
+                edges: [...refEdges.values()],
                 ports: [
                     {
                         id: 'refs-right',
                         layoutOptions: {
                             "elk.port.side": "EAST",
                         },
-                    }
+                    },
+                    ...refPorts.values(),
                 ],
+                children: refs.map(({ref}) => ({
+                    id: ref,
+                    width: label(ref).width,
+                    height: label(ref).height,
+                    labels: [label(ref)],
+                })),
             },
         ],
         edges: [
@@ -454,12 +629,13 @@ export default async function visualize(objects, elk, refs, indexEntries)
                 targets: ['objects-right'],
                 hidden: true,
             },
-            {
+            ...(has_ref_object_edge ? [] : [{
                 id: 'objects-refs',
                 sources: ['objects-left'],
                 targets: ['refs-right'],
                 hidden: true,
-            },
+            }]),
+            ...rootEdges.values(),
         ]
     };
     window.graph = graph;
@@ -484,22 +660,24 @@ export default async function visualize(objects, elk, refs, indexEntries)
                     fill="${node.fill ?? 'white'}"
                     style="filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.5))"
                 />
-                ${node.labels?.map(label => `
-                    ${label.box ? `
-                        <rect
-                            x=${label.isContainer ? 0 : label.x}
-                            y=${label.isContainer ? 0 : label.y}
-                            width=${label.isContainer ?
-                                (node.fillWidth ? parent?.width - 2 * FILL_X_PADDING ?? node.width : node.width)
-                                : label.width}
-                            height=${label.isContainer ? label.y * 2 + label.height : label.height}
-                            stroke="black"
-                            stroke-width="1"
-                            fill="${label.isContainer ? 'black' : 'white'}"
-                        />
-                    ` : ''}
-                    <text style='font: ${textMeasurer.font}; fill: ${label.isContainer ? 'white' : 'black'}' x="${label.x + label.width / 2}" y="${label.y + label.height / 2}" text-anchor="middle" dominant-baseline="middle">${label.text ?? ''}</text>
-                `).join('') ?? ''}
+                <g>
+                    ${node.labels?.map(label => `
+                        ${label.box ? `
+                            <rect
+                                x=${label.isContainer ? 0 : label.x}
+                                y=${label.isContainer ? 0 : label.y}
+                                width=${label.isContainer ?
+                                    (node.fillWidth ? parent?.width - 2 * FILL_X_PADDING ?? node.width : node.width)
+                                    : label.width}
+                                height=${label.isContainer ? label.y * 2 + label.height : label.height}
+                                stroke="black"
+                                stroke-width="1"
+                                fill="${label.isContainer ? 'black' : 'white'}"
+                            />
+                        ` : ''}
+                        <text style='font: ${textMeasurer.font}; fill: ${label.isContainer ? 'white' : 'black'}' x="${label.x + label.width / 2}" y="${label.y + label.height / 2}" text-anchor="middle" dominant-baseline="middle">${label.text ?? ''}</text>
+                    `).join('') ?? ''}
+                </g>
             </g>
             <g transform="translate(${node.x}, ${node.y})">
                 ${node.children?.map(child => toSvg(child, node, node.fillWidth ? node.x - FILL_X_PADDING + fillXOffset : 0, node.fillHeight ? node.y - FILL_Y_PADDING_TOP + fillYOffset : 0)).join('') ?? ''}
