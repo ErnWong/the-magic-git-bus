@@ -180,8 +180,6 @@ export default async function visualize(objects, elk, refs, indexEntries)
         }
     }
 
-    let has_ref_object_edge = false;
-
     for(const {ref, target, type} of refs)
     {
         const cssClass = `edge-from-${pathToCss(ref)}`;
@@ -199,7 +197,6 @@ export default async function visualize(objects, elk, refs, indexEntries)
                 });
             }
         } else {
-            has_ref_object_edge = true;
             const refPortId = `${ref}-port`;
             const targetPortId = type === 'commit' ? port_id_for_commit_from_tag(target) : port_id_for_incoming(target);
             addPortOrEdge(refPorts, {
@@ -255,10 +252,8 @@ export default async function visualize(objects, elk, refs, indexEntries)
             });
         }
     }
-    let has_index_object_edge = false;
     for(const {path, oid} of indexEntries)
     {
-        has_index_object_edge = true;
         const cssClass = `edge-from-index-${pathToCss(path)}`;
         const indexPortId = `${path}-index-port`;
         addPortOrEdge(indexPorts, {
@@ -361,7 +356,7 @@ export default async function visualize(objects, elk, refs, indexEntries)
                 id: 'objects',
                 layoutOptions: {
                     'elk.direction': 'RIGHT',
-                    "elk.portConstraints": "FIXED_SIDE",
+                    "elk.portConstraints": "FIXED_ORDER",
                     'partitioning.partition': '1',
                 },
                 fill: '#DDD',
@@ -645,12 +640,12 @@ export default async function visualize(objects, elk, refs, indexEntries)
                 targets: ['objects-right'],
                 hidden: true,
             },
-            ...(has_ref_object_edge ? [] : [{
+            {
                 id: 'objects-refs',
                 sources: ['objects-left'],
                 targets: ['refs-right'],
                 hidden: true,
-            }]),
+            },
             ...rootEdges.values(),
         ]
     };
