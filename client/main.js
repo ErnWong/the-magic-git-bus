@@ -202,6 +202,14 @@ if(METHOD === '9p')
             }
         });
 
+        let previous = {
+            oidSet: new Set(),
+            refSet: new Set(),
+            indexSet: new Set(),
+        };
+
+        const setEquals = (a, b) => a.size === b.size && [...a].every(x => b.has(x));
+
         setInterval(async () =>
         {
             const cache = {};
@@ -222,7 +230,17 @@ if(METHOD === '9p')
                 })));
             const indexEntries = pathExists('.git/index') ? await git.listFiles({ fs, cache, dir: '', fullEntry: true }) : [];
 
+            const oidSet = new Set(objectById.keys());
+            const refSet = new Set(refs.map(ref => `${ref.ref}==>${ref.target}`));
+            const indexSet = new Set(indexEntries.map(entry => `${entry.path}==>${entry.oid}`));
+
+            if (setEquals(oidSet, previous.oidSet) && setEquals(refSet, previous.refSet) && setEquals(indexSet, previous.indexSet)) {
+                return;
+            }
+
             visualize(objects, elk, refs, indexEntries);
+
+            previous = { oidSet, refSet, indexSet };
         }, 300);
     })();
 }
