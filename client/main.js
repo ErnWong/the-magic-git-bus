@@ -175,6 +175,7 @@ if(METHOD === '9p')
                         ino: p.id,
                         mtimeMs: inode.mtime * 1000,
                         ctimeMs: inode.ctime * 1000,
+                        isDirectory() { return type === 'dir'; },
                     };
                 },
                 async lstat(path, options)
