@@ -1,6 +1,8 @@
 const decoder = new TextDecoder();
 export default async function visualize(objects, elk, refs, indexEntries)
 {
+    const pathToCss= ref => ref.replace(/[\/.]/g, '-');
+
     const forwardEdges = object => ({
         blob: () => [],
         tree: () => object.object.map(treeEntry => treeEntry.oid),
@@ -17,6 +19,17 @@ export default async function visualize(objects, elk, refs, indexEntries)
             edges.push(object.oid);
             backwardEdges.set(targetId, edges);
         }
+    }
+    for(const ref of refs) {
+        const target = ref.target.startsWith("ref: ") ? pathToCss(ref.target.replace(/^ref: /,'')) : ref.target;
+        const edges = backwardEdges.get(target) ?? [];
+        edges.push(pathToCss(ref.ref));
+        backwardEdges.set(target, edges);
+    }
+    for(const entry of indexEntries) {
+        const edges = backwardEdges.get(entry.oid) ?? [];
+        edges.push('index-' + pathToCss(entry.path));
+        backwardEdges.set(entry.oid, edges);
     }
     const reachableToOid = new Map();
     const reachableTo = oid => {
@@ -171,7 +184,7 @@ export default async function visualize(objects, elk, refs, indexEntries)
 
     for(const {ref, target, type} of refs)
     {
-        const cssClass = `edge-from-ref-${ref}`;
+        const cssClass = `edge-from-${pathToCss(ref)}`;
         if (target.startsWith("ref: ")) {
             // Symbolic ref
             const targetRef = target.replace(/^ref: /, '');
@@ -246,7 +259,7 @@ export default async function visualize(objects, elk, refs, indexEntries)
     for(const {path, oid} of indexEntries)
     {
         has_index_object_edge = true;
-        const cssClass = `edge-from-index-${path}`;
+        const cssClass = `edge-from-index-${pathToCss(path)}`;
         const indexPortId = `${path}-index-port`;
         addPortOrEdge(indexPorts, {
             id: indexPortId,
@@ -254,7 +267,8 @@ export default async function visualize(objects, elk, refs, indexEntries)
             layoutOptions: {
                 'elk.port.side': 'WEST',
             },
-            cssClass,
+            cssId: `thing-index-${pathToCss(path)}`,
+            cssClass: `${cssClass} thing`,
         });
         const objectPortId = `${oid}-index-object-port`;
         addPortOrEdge(objectPorts, {
@@ -391,8 +405,8 @@ export default async function visualize(objects, elk, refs, indexEntries)
                                 width: charWidth * TAG_MAX_CHARS + 40,
                                 height: LABEL_HEIGHT * 2 + 20,
                                 fill: 'green',
-                                cssId: 'object-' + object.oid,
-                                cssClass: 'object',
+                                cssId: 'thing-' + object.oid,
+                                cssClass: 'thing',
                                 labels: [
                                     label(object.oid.slice(0, 7).padEnd(TAG_MAX_CHARS)),
                                     label(object.object.message.slice(0,TAG_MAX_CHARS).padEnd(TAG_MAX_CHARS)),
@@ -426,8 +440,8 @@ export default async function visualize(objects, elk, refs, indexEntries)
                                 width: label([...Array(COMMIT_MAX_CHARS).join(' ')]).width + 20,
                                 height: label([...Array(COMMIT_MAX_CHARS).join(' ')]).height * 2 + 20,
                                 fill: 'yellow',
-                                cssId: 'object-' + object.oid,
-                                cssClass: 'object',
+                                cssId: 'thing-' + object.oid,
+                                cssClass: 'thing',
                                 layoutOptions: {
                                     "elk.portConstraints": "FIXED_SIDE",
                                 },
@@ -495,8 +509,8 @@ export default async function visualize(objects, elk, refs, indexEntries)
                                     fill: '#FAA',
                                     width: width + 10,
                                     height: totalHeight + 20,
-                                    cssId: 'object-' + object.oid,
-                                    cssClass: 'object',
+                                    cssId: 'thing-' + object.oid,
+                                    cssClass: 'thing',
                                     layoutOptions: {
                                         "elk.portConstraints": "FIXED_ORDER",
                                         'portLabels.placement': "[INSIDE]",
@@ -557,8 +571,8 @@ export default async function visualize(objects, elk, refs, indexEntries)
                                 width: label([...Array(BLOB_MAX_CHARS).join(' ')]).width + 20,
                                 height: label([...Array(BLOB_MAX_CHARS).join(' ')]).height * 2 + 20,
                                 fill: 'cyan',
-                                cssId: 'object-' + object.oid,
-                                cssClass: 'object',
+                                cssId: 'thing-' + object.oid,
+                                cssClass: 'thing',
 
                                 labels: [label(object.oid.slice(0, 7).padEnd(BLOB_MAX_CHARS)), label(decoder.decode(object.object).slice(0, BLOB_MAX_CHARS).padEnd(BLOB_MAX_CHARS))],
                                 ports: [
@@ -619,6 +633,8 @@ export default async function visualize(objects, elk, refs, indexEntries)
                     width: label(ref).width,
                     height: label(ref).height,
                     labels: [label(ref)],
+                    cssClass: 'thing',
+                    cssId: `thing-${pathToCss(ref)}`,
                 })),
             },
         ],
@@ -709,24 +725,29 @@ export default async function visualize(objects, elk, refs, indexEntries)
         </g>
     `;
 
+    const things = [
+        ...objects.map(x => x.oid),
+        ...refs.map(x => pathToCss(x.ref)),
+        ...indexEntries.map(x => `index-${pathToCss(x.path)}`),
+    ];
     document.getElementById('graph').innerHTML = `
         <style>
-            ${objects.map(object => `
-                #graph:has(.object:hover):not(:has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')}))) #object-${object.oid} {
+            ${things.map(thing => `
+                #graph:has(.thing:hover):not(:has(:where(${[...reachableTo(thing)].map(x => `#thing-${x}:hover`).join(',')}))) #thing-${thing} {
                     opacity: 0.2;
                 }
-                #graph:has(.object:hover):has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')})) #object-${object.oid} > g > rect {
+                #graph:has(.thing:hover):has(:where(${[...reachableTo(thing)].map(x => `#thing-${x}:hover`).join(',')})) #thing-${thing} > g > rect {
                     stroke: blue;
                     stroke-width: 2px;
                 }
-                #graph:has(.object:hover):not(:has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')}))) .edge-from-${object.oid} {
+                #graph:has(.thing:hover):not(:has(:where(${[...reachableTo(thing)].map(x => `#thing-${x}:hover`).join(',')}))) .edge-from-${thing} {
                     opacity: 0.2;
                 }
-                #graph:has(.object:hover):has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')})) polyline.edge-from-${object.oid} {
+                #graph:has(.thing:hover):has(:where(${[...reachableTo(thing)].map(x => `#thing-${x}:hover`).join(',')})) polyline.edge-from-${thing} {
                     stroke: blue;
                     stroke-width: 2px;
                 }
-                #graph:has(.object:hover):has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')})) circle.edge-from-${object.oid} {
+                #graph:has(.thing:hover):has(:where(${[...reachableTo(thing)].map(x => `#thing-${x}:hover`).join(',')})) circle.edge-from-${thing} {
                     fill: blue;
                 }
             `).join('\n')}
