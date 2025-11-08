@@ -11,668 +11,351 @@
     </head>
     <body>
         <div id="graph"></div>
-        <script type="text/javascript">
+        <script type="module">
+            import visualize from './client/visualize.js';
             const decoder = new TextDecoder();
 
-            const objects = [{"object":{"message":"My first commit\n","parent":[],"tree":"6db497f8ca5a8bf50591fd13beb12fc66dff1d31","author":{"name":"Waylon Smithers","email":"mr@smithers.invalid","timestamp":1762902000,"timezoneOffset":-780},"committer":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780}},"format":"parsed","source":"objects/02/cbc162b0a74f3cbb90c6c7bcf7387b3033015b","type":"commit","oid":"02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"},{"object":new Uint8Array({"0":109,"1":111,"2":100,"3":105,"4":102,"5":105,"6":101,"7":100,"8":10, length:9}),"format":"content","source":"objects/2e/0996000b7e9019eabcad29391bf0f5c7702f0b","type":"blob","oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b"},{"object":new Uint8Array({"0":102,"1":111,"2":111,"3":98,"4":97,"5":114,"6":10, length:7}),"format":"content","source":"objects/32/3fae03f4606ea9991df8befbb2fca795e648fa","type":"blob","oid":"323fae03f4606ea9991df8befbb2fca795e648fa"},{"object":new Uint8Array({"0":104,"1":101,"2":108,"3":108,"4":111,"5":32,"6":119,"7":111,"8":114,"9":108,"10":100,"11":10, length: 12}),"format":"content","source":"objects/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad"},{"object":[{"mode":"040000","path":"folder","oid":"974cd135eb6c4da9d3f14e1de564f76a8a07234e","type":"tree"},{"mode":"100644","path":"myfile.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"},{"mode":"100644","path":"otherfile.txt","oid":"323fae03f4606ea9991df8befbb2fca795e648fa","type":"blob"}],"format":"parsed","source":"objects/48/6a17fba0168a9242e39931c2b0233ada6a9671","type":"tree","oid":"486a17fba0168a9242e39931c2b0233ada6a9671"},{"object":[{"mode":"040000","path":"folder","oid":"8209f53524b4818a6d18424613de08c1c6552f11","type":"tree"},{"mode":"100644","path":"myfile.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"},{"mode":"100644","path":"otherfile.txt","oid":"323fae03f4606ea9991df8befbb2fca795e648fa","type":"blob"}],"format":"parsed","source":"objects/6d/b497f8ca5a8bf50591fd13beb12fc66dff1d31","type":"tree","oid":"6db497f8ca5a8bf50591fd13beb12fc66dff1d31"},{"object":{"message":"Second commit!\n","parent":["02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"],"tree":"486a17fba0168a9242e39931c2b0233ada6a9671","author":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780},"committer":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780}},"format":"parsed","source":"objects/70/4cad9af4578d8f3248fe4c4e044014322f1154","type":"commit","oid":"704cad9af4578d8f3248fe4c4e044014322f1154"},{"object":[{"mode":"100644","path":"copy.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"}],"format":"parsed","source":"objects/82/09f53524b4818a6d18424613de08c1c6552f11","type":"tree","oid":"8209f53524b4818a6d18424613de08c1c6552f11"},{"object":[{"mode":"100644","path":"copy.txt","oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b","type":"blob"}],"format":"parsed","source":"objects/97/4cd135eb6c4da9d3f14e1de564f76a8a07234e","type":"tree","oid":"974cd135eb6c4da9d3f14e1de564f76a8a07234e"}];
-
-            const objectById = new Map(objects.map(object => [object.oid, object]));
-
-            const forwardEdges = object => ({
-                blob: () => [],
-                tree: () => object.object.map(treeEntry => treeEntry.oid),
-                commit: () => [
-                    object.object.tree,
-                    ...object.object.parent,
-                ],
-                tag: () => [object.object.object],
-            })[object.type]();
-            const backwardEdges = new Map();
-            for(const object of objects) {
-                for(const targetId of forwardEdges(object)) {
-                    const edges = backwardEdges.get(targetId) ?? [];
-                    edges.push(object.oid);
-                    backwardEdges.set(targetId, edges);
-                }
+            // const objects = [{"object":{"message":"My first commit\n","parent":[],"tree":"6db497f8ca5a8bf50591fd13beb12fc66dff1d31","author":{"name":"Waylon Smithers","email":"mr@smithers.invalid","timestamp":1762902000,"timezoneOffset":-780},"committer":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780}},"format":"parsed","source":"objects/02/cbc162b0a74f3cbb90c6c7bcf7387b3033015b","type":"commit","oid":"02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"},{"object":new Uint8Array({"0":109,"1":111,"2":100,"3":105,"4":102,"5":105,"6":101,"7":100,"8":10, length:9}),"format":"content","source":"objects/2e/0996000b7e9019eabcad29391bf0f5c7702f0b","type":"blob","oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b"},{"object":new Uint8Array({"0":102,"1":111,"2":111,"3":98,"4":97,"5":114,"6":10, length:7}),"format":"content","source":"objects/32/3fae03f4606ea9991df8befbb2fca795e648fa","type":"blob","oid":"323fae03f4606ea9991df8befbb2fca795e648fa"},{"object":new Uint8Array({"0":104,"1":101,"2":108,"3":108,"4":111,"5":32,"6":119,"7":111,"8":114,"9":108,"10":100,"11":10, length: 12}),"format":"content","source":"objects/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad"},{"object":[{"mode":"040000","path":"folder","oid":"974cd135eb6c4da9d3f14e1de564f76a8a07234e","type":"tree"},{"mode":"100644","path":"myfile.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"},{"mode":"100644","path":"otherfile.txt","oid":"323fae03f4606ea9991df8befbb2fca795e648fa","type":"blob"}],"format":"parsed","source":"objects/48/6a17fba0168a9242e39931c2b0233ada6a9671","type":"tree","oid":"486a17fba0168a9242e39931c2b0233ada6a9671"},{"object":[{"mode":"040000","path":"folder","oid":"8209f53524b4818a6d18424613de08c1c6552f11","type":"tree"},{"mode":"100644","path":"myfile.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"},{"mode":"100644","path":"otherfile.txt","oid":"323fae03f4606ea9991df8befbb2fca795e648fa","type":"blob"}],"format":"parsed","source":"objects/6d/b497f8ca5a8bf50591fd13beb12fc66dff1d31","type":"tree","oid":"6db497f8ca5a8bf50591fd13beb12fc66dff1d31"},{"object":{"message":"Second commit!\n","parent":["02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"],"tree":"486a17fba0168a9242e39931c2b0233ada6a9671","author":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780},"committer":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780}},"format":"parsed","source":"objects/70/4cad9af4578d8f3248fe4c4e044014322f1154","type":"commit","oid":"704cad9af4578d8f3248fe4c4e044014322f1154"},{"object":[{"mode":"100644","path":"copy.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"}],"format":"parsed","source":"objects/82/09f53524b4818a6d18424613de08c1c6552f11","type":"tree","oid":"8209f53524b4818a6d18424613de08c1c6552f11"},{"object":[{"mode":"100644","path":"copy.txt","oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b","type":"blob"}],"format":"parsed","source":"objects/97/4cd135eb6c4da9d3f14e1de564f76a8a07234e","type":"tree","oid":"974cd135eb6c4da9d3f14e1de564f76a8a07234e"}];
+            // const objects = [{"object":{"message":"My first commit\n","parent":[],"tree":"6db497f8ca5a8bf50591fd13beb12fc66dff1d31","author":{"name":"Waylon Smithers","email":"mr@smithers.invalid","timestamp":1762902000,"timezoneOffset":-780},"committer":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780}},"format":"parsed","source":"objects/02/cbc162b0a74f3cbb90c6c7bcf7387b3033015b","type":"commit","oid":"02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"},{"object":{"message":"Third commit\n","parent":["704cad9af4578d8f3248fe4c4e044014322f1154"],"tree":"642e9deed324c2e9d9bd87888c99abb15f93023a","author":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762332429,"timezoneOffset":0},"committer":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762332429,"timezoneOffset":0}},"format":"parsed","source":"objects/15/8eb5efceee3403f3720496725ccecff56c3d5d","type":"commit","oid":"158eb5efceee3403f3720496725ccecff56c3d5d"},{"object":{"0":109,"1":111,"2":100,"3":105,"4":102,"5":105,"6":101,"7":100,"8":10},"format":"content","source":"objects/2e/0996000b7e9019eabcad29391bf0f5c7702f0b","type":"blob","oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b"},{"object":{"0":102,"1":111,"2":111,"3":98,"4":97,"5":114,"6":10},"format":"content","source":"objects/32/3fae03f4606ea9991df8befbb2fca795e648fa","type":"blob","oid":"323fae03f4606ea9991df8befbb2fca795e648fa"},{"object":{"0":104,"1":101,"2":108,"3":108,"4":111,"5":32,"6":119,"7":111,"8":114,"9":108,"10":100,"11":10},"format":"content","source":"objects/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad"},{"object":[{"mode":"040000","path":"folder","oid":"974cd135eb6c4da9d3f14e1de564f76a8a07234e","type":"tree"},{"mode":"100644","path":"myfile.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"},{"mode":"100644","path":"otherfile.txt","oid":"323fae03f4606ea9991df8befbb2fca795e648fa","type":"blob"}],"format":"parsed","source":"objects/48/6a17fba0168a9242e39931c2b0233ada6a9671","type":"tree","oid":"486a17fba0168a9242e39931c2b0233ada6a9671"},{"object":[{"mode":"040000","path":"to","oid":"deefb5a5e0c43ecf4beb0d8e58f38d13c385897c","type":"tree"}],"format":"parsed","source":"objects/53/d57bf2b32a3056f3b718b441273a35d51854ce","type":"tree","oid":"53d57bf2b32a3056f3b718b441273a35d51854ce"},{"object":[{"mode":"040000","path":"my","oid":"773ff37ea12f7463f4711e243fb356bf4fdd37a4","type":"tree"},{"mode":"100644","path":"newfile.txt","oid":"77f863d7ef03a35f42322002610517163f18a4f6","type":"blob"}],"format":"parsed","source":"objects/64/2e9deed324c2e9d9bd87888c99abb15f93023a","type":"tree","oid":"642e9deed324c2e9d9bd87888c99abb15f93023a"},{"object":[{"mode":"040000","path":"folder","oid":"8209f53524b4818a6d18424613de08c1c6552f11","type":"tree"},{"mode":"100644","path":"myfile.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"},{"mode":"100644","path":"otherfile.txt","oid":"323fae03f4606ea9991df8befbb2fca795e648fa","type":"blob"}],"format":"parsed","source":"objects/6d/b497f8ca5a8bf50591fd13beb12fc66dff1d31","type":"tree","oid":"6db497f8ca5a8bf50591fd13beb12fc66dff1d31"},{"object":{"message":"Second commit!\n","parent":["02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"],"tree":"486a17fba0168a9242e39931c2b0233ada6a9671","author":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780},"committer":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762902000,"timezoneOffset":-780}},"format":"parsed","source":"objects/70/4cad9af4578d8f3248fe4c4e044014322f1154","type":"commit","oid":"704cad9af4578d8f3248fe4c4e044014322f1154"},{"object":[{"mode":"040000","path":"path","oid":"53d57bf2b32a3056f3b718b441273a35d51854ce","type":"tree"}],"format":"parsed","source":"objects/77/3ff37ea12f7463f4711e243fb356bf4fdd37a4","type":"tree","oid":"773ff37ea12f7463f4711e243fb356bf4fdd37a4"},{"object":{"0":110,"1":101,"2":119,"3":45,"4":99,"5":111,"6":110,"7":116,"8":101,"9":110,"10":116,"11":10},"format":"content","source":"objects/77/f863d7ef03a35f42322002610517163f18a4f6","type":"blob","oid":"77f863d7ef03a35f42322002610517163f18a4f6"},{"object":[{"mode":"100644","path":"copy.txt","oid":"3b18e512dba79e4c8300dd08aeb37f8e728b8dad","type":"blob"}],"format":"parsed","source":"objects/82/09f53524b4818a6d18424613de08c1c6552f11","type":"tree","oid":"8209f53524b4818a6d18424613de08c1c6552f11"},{"object":[{"mode":"100644","path":"copy.txt","oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b","type":"blob"}],"format":"parsed","source":"objects/97/4cd135eb6c4da9d3f14e1de564f76a8a07234e","type":"tree","oid":"974cd135eb6c4da9d3f14e1de564f76a8a07234e"},{"object":[{"mode":"040000","path":"my","oid":"773ff37ea12f7463f4711e243fb356bf4fdd37a4","type":"tree"}],"format":"parsed","source":"objects/cf/cb4ca1dbe0dbcfd99df397d57d2d6fe3853745","type":"tree","oid":"cfcb4ca1dbe0dbcfd99df397d57d2d6fe3853745"},{"object":[{"mode":"100644","path":"file.txt","oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b","type":"blob"}],"format":"parsed","source":"objects/de/efb5a5e0c43ecf4beb0d8e58f38d13c385897c","type":"tree","oid":"deefb5a5e0c43ecf4beb0d8e58f38d13c385897c"},{"object":{"object":"704cad9af4578d8f3248fe4c4e044014322f1154","type":"commit","tag":"my-important-tag","tagger":{"name":"Charles Montgomery Plantagenet Schicklgruber Burns","email":"mr@burns.invalid","timestamp":1762332442,"timezoneOffset":0},"message":"This is an important commit\n"},"format":"parsed","source":"objects/f2/07b94a58c21c169615ca39570db991922c2341","type":"tag","oid":"f207b94a58c21c169615ca39570db991922c2341"}];
+            
+            const objects = [
+    {
+        "object": {
+            "message": "My first commit\n",
+            "parent": [],
+            "tree": "6db497f8ca5a8bf50591fd13beb12fc66dff1d31",
+            "author": {
+                "name": "Waylon Smithers",
+                "email": "mr@smithers.invalid",
+                "timestamp": 1762902000,
+                "timezoneOffset": -780
+            },
+            "committer": {
+                "name": "Charles Montgomery Plantagenet Schicklgruber Burns",
+                "email": "mr@burns.invalid",
+                "timestamp": 1762902000,
+                "timezoneOffset": -780
             }
-            const reachableToOid = new Map();
-            const reachableTo = oid => {
-                if (reachableToOid.has(oid)) return reachableToOid.get(oid);
-                const reachable = new Set([
-                    oid,
-                    ...(backwardEdges.get(oid) ?? []).flatMap(x => [
-                        x,
-                        ...reachableTo(x),
-                    ])
-                ]);
-                reachableToOid.set(oid, reachable);
-                return reachable;
-            };
-
-            const TYPES = ['tag', 'commit', 'tree', 'blob'];
-            const port_id_for_incoming = (oid) => `${oid}-in`;
-            const port_id_for_commit_from_tag = (oid) => `${oid}-in-tag`;
-            const tree_entry_edge = (oid, treeEntry) =>
-            ({
-                id: port_id_for_tree_entry(oid, treeEntry),
-                sources: [port_id_for_tree_entry(oid, treeEntry)],
-                targets: [port_id_for_incoming(treeEntry.oid)],
-            });
-            const port_id_for_commit_tree = (oid) => `${oid}-tree`;
-            const port_id_for_commit_parent = (oid, parentIndex) => `${oid}-parent-${parentIndex}`;
-            const port_id_for_tree_entry = (oid, treeEntry) => `${oid}-${treeEntry.path}`;
-            //const PORTS_FOR_TYPE =
-            //{
-            //    blob: object => [{
-            //        id: port_id_for_incoming(object.oid),
-            //        layoutOptions: {
-            //            "elk.port.side": "WEST",
-            //        },
-            //    }],
-            //    commit: object => [
-            //        {
-            //            id: port_id_for_commit_tree(object.oid),
-            //            layoutOptions: {
-            //                "elk.port.side": "EAST",
-            //            },
-            //        },
-            //        {
-            //            id: port_id_for_commit_from_tag(object.oid),
-            //            layoutOptions: {
-            //                "elk.port.side": "WEST",
-            //            },
-            //        },
-            //        {
-            //            id: port_id_for_incoming(object.oid),
-            //            layoutOptions: {
-            //                "elk.port.side": "NORTH",
-            //            },
-            //        },
-            //        ...object.object.parent.map((parent, parentindex) =>
-            //        ({
-            //            id: port_id_for_commit_parent(object.oid, parentindex),
-            //        })),
-            //    ],
-            //    tree: object => [
-            //        {
-            //            id: port_id_for_incoming(object.oid),
-            //            layoutOptions: {
-            //                "elk.port.side": "WEST",
-            //            },
-            //        },
-            //        ...object.object.map(treeEntry =>
-            //        ({
-            //            id: port_id_for_tree_entry(object.oid, treeEntry),
-            //            layoutOptions: {
-            //                "elk.port.side": "EAST",
-            //            },
-            //        })),
-            //    ],
-            //    tag: object => [
-            //        {
-            //            id: port_id_for_incoming(object.oid),
-            //        },
-            //    ],
-            //};
-            const EDGES_FOR_TYPE =
-            {
-                blob: _ => [],
-                commit: object => [
-                    {
-                        id: port_id_for_commit_tree(object.oid) + '-edge',
-                        sources: [port_id_for_commit_tree(object.oid)],
-                        targets: [port_id_for_incoming(object.object.tree)],
-                        type: 'tree',
-                        cssClass: `edge-from-${object.oid}`,
-                    },
-                    ...object.object.parent.map((parent, parentIndex) =>
-                    ({
-                        id: port_id_for_commit_parent(object.oid, parentIndex) + '-edge',
-                        sources: [port_id_for_commit_parent(object.oid, parentIndex)],
-                        targets: [port_id_for_incoming(parent)],
-                        type: 'commit',
-                        cssClass: `edge-from-${object.oid}`,
-                    })),
-                ],
-                tree: object => object.object.map(treeEntry =>
-                ({
-                    id: port_id_for_tree_entry(object.oid, treeEntry) + '-edge',
-                    sources: [port_id_for_tree_entry(object.oid, treeEntry)],
-                    targets: [port_id_for_incoming(treeEntry.oid)],
-                    type: treeEntry.type,
-                    cssClass: `edge-from-${object.oid}`,
-                })),
-                tag: object =>
-                ({
-                    id: `${object.oid}-target`,
-                    sources: [object.oid],
-                    targets: [port_id_for_commit_from_tag(object.object.object)],
-                    type: object.object.type,
-                    cssClass: `edge-from-${object.oid}`,
-                }),
-            };
-            const iota = length => [...Array(length)].map((_, i) => i);
-            const outsideEdges = [];
-            const edgeInfoPerType = Object.fromEntries(TYPES.map(type => [type, {
-                edges: [],
-                ports: new Map(),
-            }]));
-
-            for (const object of objects) {
-                for (const edge of EDGES_FOR_TYPE[object.type](object)) {
-                    if(edge.type === object.type) {
-                        edgeInfoPerType[object.type].edges.push({
-                            ...edge,
-                            isEnd: true,
-                        });
-                    } else {
-                        const sourceSide = TYPES.indexOf(object.type) < TYPES.indexOf(edge.type) ? 'EAST' : 'WESET';
-                        const sourcePortId = `${edge.sources[0]}-type-source-port-${sourceSide}`;
-                        const targetSide = TYPES.indexOf(object.type) < TYPES.indexOf(edge.type) ? 'WEST' : 'EAST';
-                        const targetPortId = `${edge.targets[0]}-type-target-port-${targetSide}`;
-                        edgeInfoPerType[object.type].ports.set(sourcePortId, {
-                            id: sourcePortId,
-                            layoutOptions: {
-                                'elk.port.side': sourceSide,
-                                "elk.portConstraints": "FIXED_SIDE",
-                            },
-                            cssId: edge.cssId,
-                            cssClass: edge.cssClass,
-                        });
-                        edgeInfoPerType[object.type].edges.push({
-                            id: `${edge.sources[0]}-type-source-port-edge`,
-                            sources: edge.sources,
-                            targets: [sourcePortId],
-                            isEnd: false,
-                            cssId: edge.cssId,
-                            cssClass: edge.cssClass,
-                        });
-                        outsideEdges.push({
-                            id: `${edge.id}-outside`,
-                            sources: [sourcePortId],
-                            targets: [targetPortId],
-                            isEnd: false,
-                            cssId: edge.cssId,
-                            cssClass: edge.cssClass,
-                        });
-                        edgeInfoPerType[edge.type].ports.set(targetPortId, {
-                            id: targetPortId,
-                            layoutOptions: {
-                                'elk.port.side': targetSide,
-                                "elk.portConstraints": "FIXED_SIDE",
-                            },
-                            cssId: edge.cssId,
-                            cssClass: edge.cssClass,
-                        });
-                        edgeInfoPerType[edge.type].edges.push({
-                            id: `${edge.targets[0]}-type-target-port-edge`,
-                            sources: [targetPortId],
-                            targets: edge.targets,
-                            isEnd: true,
-                            cssId: edge.cssId,
-                            cssClass: edge.cssClass,
-                        });
-                    }
-                }
+        },
+        "format": "parsed",
+        "source": "objects/02/cbc162b0a74f3cbb90c6c7bcf7387b3033015b",
+        "type": "commit",
+        "oid": "02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"
+    },
+    {
+        "object": {
+            "message": "Third commit\n",
+            "parent": [
+                "704cad9af4578d8f3248fe4c4e044014322f1154"
+            ],
+            "tree": "642e9deed324c2e9d9bd87888c99abb15f93023a",
+            "author": {
+                "name": "Charles Montgomery Plantagenet Schicklgruber Burns",
+                "email": "mr@burns.invalid",
+                "timestamp": 1762332429,
+                "timezoneOffset": 0
+            },
+            "committer": {
+                "name": "Charles Montgomery Plantagenet Schicklgruber Burns",
+                "email": "mr@burns.invalid",
+                "timestamp": 1762332429,
+                "timezoneOffset": 0
             }
-
-            const textMeasurer = document.createElement("canvas").getContext("2d");
-            textMeasurer.font = `12px 'Fixedsys Excelsior 3.01'`;
-            const charWidth = textMeasurer.measureText('A').width;
-
-            const label = (text, isContainer=false) => ({
-                text,
-                width: charWidth * (text.length + 2),
-                height: 20,
-                "layoutOptions": {
-                    "nodeLabels.placement": `[H_CENTER, ${isContainer ? 'V_TOP' : 'V_CENTER'}, INSIDE]`,
-                },
-                isContainer,
-                box: true,
-            });
-
-            const BLOB_MAX_CHARS = 30;
-            const COMMIT_MAX_CHARS = 20;
-
-            const graph =
+        },
+        "format": "parsed",
+        "source": "objects/15/8eb5efceee3403f3720496725ccecff56c3d5d",
+        "type": "commit",
+        "oid": "158eb5efceee3403f3720496725ccecff56c3d5d"
+    },
+    {
+        "object": new Uint8Array({
+            "0": 109,
+            "1": 111,
+            "2": 100,
+            "3": 105,
+            "4": 102,
+            "5": 105,
+            "6": 101,
+            "7": 100,
+            "8": 10,
+            length: 9
+        }),
+        "format": "content",
+        "source": "objects/2e/0996000b7e9019eabcad29391bf0f5c7702f0b",
+        "type": "blob",
+        "oid": "2e0996000b7e9019eabcad29391bf0f5c7702f0b"
+    },
+    {
+        "object": new Uint8Array({
+            "0": 102,
+            "1": 111,
+            "2": 111,
+            "3": 98,
+            "4": 97,
+            "5": 114,
+            "6": 10,
+            length: 7
+        }),
+        "format": "content",
+        "source": "objects/32/3fae03f4606ea9991df8befbb2fca795e648fa",
+        "type": "blob",
+        "oid": "323fae03f4606ea9991df8befbb2fca795e648fa"
+    },
+    {
+        "object": new Uint8Array({
+            "0": 104,
+            "1": 101,
+            "2": 108,
+            "3": 108,
+            "4": 111,
+            "5": 32,
+            "6": 119,
+            "7": 111,
+            "8": 114,
+            "9": 108,
+            "10": 100,
+            "11": 10,
+            length: 12,
+        }),
+        "format": "content",
+        "source": "objects/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad",
+        "type": "blob",
+        "oid": "3b18e512dba79e4c8300dd08aeb37f8e728b8dad"
+    },
+    {
+        "object": [
             {
-                id: 'git',
-                labels: [label(".git", true)],
-                layoutOptions: {
-                    //'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-                    'elk.direction': 'RIGHT',
+                "mode": "040000",
+                "path": "folder",
+                "oid": "974cd135eb6c4da9d3f14e1de564f76a8a07234e",
+                "type": "tree"
+            },
+            {
+                "mode": "100644",
+                "path": "myfile.txt",
+                "oid": "3b18e512dba79e4c8300dd08aeb37f8e728b8dad",
+                "type": "blob"
+            },
+            {
+                "mode": "100644",
+                "path": "otherfile.txt",
+                "oid": "323fae03f4606ea9991df8befbb2fca795e648fa",
+                "type": "blob"
+            }
+        ],
+        "format": "parsed",
+        "source": "objects/48/6a17fba0168a9242e39931c2b0233ada6a9671",
+        "type": "tree",
+        "oid": "486a17fba0168a9242e39931c2b0233ada6a9671"
+    },
+    {
+        "object": [
+            {
+                "mode": "040000",
+                "path": "to",
+                "oid": "deefb5a5e0c43ecf4beb0d8e58f38d13c385897c",
+                "type": "tree"
+            }
+        ],
+        "format": "parsed",
+        "source": "objects/53/d57bf2b32a3056f3b718b441273a35d51854ce",
+        "type": "tree",
+        "oid": "53d57bf2b32a3056f3b718b441273a35d51854ce"
+    },
+    {
+        "object": [
+            {
+                "mode": "040000",
+                "path": "my",
+                "oid": "773ff37ea12f7463f4711e243fb356bf4fdd37a4",
+                "type": "tree"
+            },
+            {
+                "mode": "100644",
+                "path": "newfile.txt",
+                "oid": "77f863d7ef03a35f42322002610517163f18a4f6",
+                "type": "blob"
+            }
+        ],
+        "format": "parsed",
+        "source": "objects/64/2e9deed324c2e9d9bd87888c99abb15f93023a",
+        "type": "tree",
+        "oid": "642e9deed324c2e9d9bd87888c99abb15f93023a"
+    },
+    {
+        "object": [
+            {
+                "mode": "040000",
+                "path": "folder",
+                "oid": "8209f53524b4818a6d18424613de08c1c6552f11",
+                "type": "tree"
+            },
+            {
+                "mode": "100644",
+                "path": "myfile.txt",
+                "oid": "3b18e512dba79e4c8300dd08aeb37f8e728b8dad",
+                "type": "blob"
+            },
+            {
+                "mode": "100644",
+                "path": "otherfile.txt",
+                "oid": "323fae03f4606ea9991df8befbb2fca795e648fa",
+                "type": "blob"
+            }
+        ],
+        "format": "parsed",
+        "source": "objects/6d/b497f8ca5a8bf50591fd13beb12fc66dff1d31",
+        "type": "tree",
+        "oid": "6db497f8ca5a8bf50591fd13beb12fc66dff1d31"
+    },
+    {
+        "object": {
+            "message": "Second commit!\n",
+            "parent": [
+                "02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"
+            ],
+            "tree": "486a17fba0168a9242e39931c2b0233ada6a9671",
+            "author": {
+                "name": "Charles Montgomery Plantagenet Schicklgruber Burns",
+                "email": "mr@burns.invalid",
+                "timestamp": 1762902000,
+                "timezoneOffset": -780
+            },
+            "committer": {
+                "name": "Charles Montgomery Plantagenet Schicklgruber Burns",
+                "email": "mr@burns.invalid",
+                "timestamp": 1762902000,
+                "timezoneOffset": -780
+            }
+        },
+        "format": "parsed",
+        "source": "objects/70/4cad9af4578d8f3248fe4c4e044014322f1154",
+        "type": "commit",
+        "oid": "704cad9af4578d8f3248fe4c4e044014322f1154"
+    },
+    {
+        "object": [
+            {
+                "mode": "040000",
+                "path": "path",
+                "oid": "53d57bf2b32a3056f3b718b441273a35d51854ce",
+                "type": "tree"
+            }
+        ],
+        "format": "parsed",
+        "source": "objects/77/3ff37ea12f7463f4711e243fb356bf4fdd37a4",
+        "type": "tree",
+        "oid": "773ff37ea12f7463f4711e243fb356bf4fdd37a4"
+    },
+    {
+        "object": new Uint8Array({
+            "0": 110,
+            "1": 101,
+            "2": 119,
+            "3": 45,
+            "4": 99,
+            "5": 111,
+            "6": 110,
+            "7": 116,
+            "8": 101,
+            "9": 110,
+            "10": 116,
+            "11": 10,
+            length: 12
+        }),
+        "format": "content",
+        "source": "objects/77/f863d7ef03a35f42322002610517163f18a4f6",
+        "type": "blob",
+        "oid": "77f863d7ef03a35f42322002610517163f18a4f6"
+    },
+    {
+        "object": [
+            {
+                "mode": "100644",
+                "path": "copy.txt",
+                "oid": "3b18e512dba79e4c8300dd08aeb37f8e728b8dad",
+                "type": "blob"
+            }
+        ],
+        "format": "parsed",
+        "source": "objects/82/09f53524b4818a6d18424613de08c1c6552f11",
+        "type": "tree",
+        "oid": "8209f53524b4818a6d18424613de08c1c6552f11"
+    },
+    {
+        "object": [
+            {
+                "mode": "100644",
+                "path": "copy.txt",
+                "oid": "2e0996000b7e9019eabcad29391bf0f5c7702f0b",
+                "type": "blob"
+            }
+        ],
+        "format": "parsed",
+        "source": "objects/97/4cd135eb6c4da9d3f14e1de564f76a8a07234e",
+        "type": "tree",
+        "oid": "974cd135eb6c4da9d3f14e1de564f76a8a07234e"
+    },
+    {
+        "object": [
+            {
+                "mode": "040000",
+                "path": "my",
+                "oid": "773ff37ea12f7463f4711e243fb356bf4fdd37a4",
+                "type": "tree"
+            }
+        ],
+        "format": "parsed",
+        "source": "objects/cf/cb4ca1dbe0dbcfd99df397d57d2d6fe3853745",
+        "type": "tree",
+        "oid": "cfcb4ca1dbe0dbcfd99df397d57d2d6fe3853745"
+    },
+    {
+        "object": [
+            {
+                "mode": "100644",
+                "path": "file.txt",
+                "oid": "2e0996000b7e9019eabcad29391bf0f5c7702f0b",
+                "type": "blob"
+            }
+        ],
+        "format": "parsed",
+        "source": "objects/de/efb5a5e0c43ecf4beb0d8e58f38d13c385897c",
+        "type": "tree",
+        "oid": "deefb5a5e0c43ecf4beb0d8e58f38d13c385897c"
+    },
+    {
+        "object": {
+            "object": "704cad9af4578d8f3248fe4c4e044014322f1154",
+            "type": "commit",
+            "tag": "my-important-tag",
+            "tagger": {
+                "name": "Charles Montgomery Plantagenet Schicklgruber Burns",
+                "email": "mr@burns.invalid",
+                "timestamp": 1762332442,
+                "timezoneOffset": 0
+            },
+            "message": "This is an important commit\n"
+        },
+        "format": "parsed",
+        "source": "objects/f2/07b94a58c21c169615ca39570db991922c2341",
+        "type": "tag",
+        "oid": "f207b94a58c21c169615ca39570db991922c2341"
+    }
+];
+
+            const refs = [{"ref":"HEAD","target":"ref: refs/heads/master"},{"ref":"refs/heads/master","target":"158eb5efceee3403f3720496725ccecff56c3d5d"},{"ref":"refs/heads/story","target":"02cbc162b0a74f3cbb90c6c7bcf7387b3033015b"},{"ref":"refs/tags/my-important-tag","target":"f207b94a58c21c169615ca39570db991922c2341"},{"ref":"refs/tags/mytag","target":"704cad9af4578d8f3248fe4c4e044014322f1154"}];
+            
+            const indexEntries = [{"oid":"2e0996000b7e9019eabcad29391bf0f5c7702f0b","path":"my/path/to/file.txt"},{"oid":"77f863d7ef03a35f42322002610517163f18a4f6","path":"newfile.txt"}];
+
+            const elk = new ELK({
+                defaultLayoutOptions: {
                     "elk.portConstraints": "FIXED_SIDE",
-                    //'layered.considerModelOrder.portModelOrder': 'true',
-                    //'interactiveLayout': 'true',
-                    //'partitioning.activate': 'true',
-                    //"layered.layering.coffmanGraham.layerBound": "1",
-                    //"layered.layering.strategy": "COFFMAN_GRAHAM",
-                },
-                fill: '#BBB',
-                children: [
-                    {
-                        id: 'index',
-                        labels: [label(".git/index", true)],
-                        width: 100,
-                        height: 100,
-                        fillHeight: true,
-                        layoutOptions: {
-                            //'layer.layering.layerChoiceConstraint': '0',
-                            'partitioning.partition': '0',
-                        },
-                        ports: [
-                            {
-                                id: 'index-left',
-                                layoutOptions: {
-                                    "elk.port.side": "WEST",
-                                },
-                            }
-                        ],
-                    },
-                    {
-                        id: 'objects',
-                        layoutOptions: {
-                            'elk.direction': 'RIGHT',
-                            "elk.portConstraints": "FIXED_SIDE",
-                            // 'layer.layering.layerChoiceConstraint': '1',
-                            'partitioning.partition': '1',
-                        },
-                        labels: [label(".git/objects", true)],
-                        width: 100,
-                        height: 100,
-                        fillHeight: true,
-                        ports: [
-                            {
-                                id: 'objects-left',
-                                layoutOptions: {
-                                    "elk.port.side": "WEST",
-                                },
-                            },
-                            {
-                                id: 'objects-right',
-                                layoutOptions: {
-                                    "elk.port.side": "EAST",
-                                },
-                            },
-                        ],
-                        children:
-                        [
-                            {
-                                id: 'tag',
-                                width: 100,
-                                height: 100,
-                                fillHeight: true,
-                                layoutOptions: {
-                                    'elk.direction': 'DOWN',
-                                    "elk.portConstraints": "FIXED_SIDE",
-                                },
-                                labels: [label("Tags", true)],
-                                fill: '#DFD',
-                                children: objects
-                                    .filter(object => object.type === 'tag')
-                                    .map(object =>
-                                    ({
-                                        id: object.oid,
-                                        width: 100,
-                                        height: 100,
-                                        fill: 'green',
-                                        cssId: 'object-' + object.oid,
-                                        cssClass: 'object',
-                                        labels: [label(object.oid.slice(0, 7))],
-                                        ports: [{
-                                            id: port_id_for_incoming(object.oid),
-                                            layoutOptions: {
-                                                "elk.port.side": "WEST",
-                                            },
-                                        }],
-                                    })),
-                                edges: edgeInfoPerType.tag.edges,
-                                ports: [...edgeInfoPerType.tag.ports.values()],
-                            },
-                            {
-                                id: 'commit',
-                                width: 100,
-                                height: 100,
-                                fillHeight: true,
-                                layoutOptions: {
-                                    'elk.direction': 'UP',
-                                    "elk.portConstraints": "FIXED_SIDE",
-                                },
-                                labels: [label("Commits", true)],
-                                fill: '#FFD',
-                                children: objects
-                                    .filter(object => object.type === 'commit')
-                                    .map(object =>
-                                    ({
-                                        id: object.oid,
-                                        width: label([...Array(COMMIT_MAX_CHARS).join(' ')]).width + 20,
-                                        height: label([...Array(COMMIT_MAX_CHARS).join(' ')]).height * 2 + 20,
-                                        fill: 'yellow',
-                                        cssId: 'object-' + object.oid,
-                                        cssClass: 'object',
-                                        layoutOptions: {
-                                            "elk.portConstraints": "FIXED_SIDE",
-                                        },
-                                        labels: [label(object.oid.slice(0, 7).padEnd(COMMIT_MAX_CHARS)), label(object.object.message.padEnd(COMMIT_MAX_CHARS))].toReversed(),
-                                        ports: [
-                                            {
-                                                id: port_id_for_commit_tree(object.oid),
-                                                layoutOptions: {
-                                                    "elk.port.side": "EAST",
-                                                    "elk.portConstraints": "FIXED_SIDE",
-                                                },
-                                            },
-                                            {
-                                                id: port_id_for_commit_from_tag(object.oid),
-                                                layoutOptions: {
-                                                    "elk.port.side": "WEST",
-                                                },
-                                            },
-                                            {
-                                                id: port_id_for_incoming(object.oid),
-                                                layoutOptions: {
-                                                    "elk.port.side": "SOUTH",
-                                                },
-                                            },
-                                            ...object.object.parent.map((parent, parentIndex) =>
-                                            ({
-                                                id: port_id_for_commit_parent(object.oid, parentIndex),
-                                                layoutOptions: {
-                                                    "elk.port.side": "NORTH",
-                                                    "elk.portConstraints": "FIXED_SIDE",
-                                                },
-                                                labels: [{ ...label('p' + parentIndex), box: false }],
-                                            })),
-                                        ],
-                                    })),
-                                edges: edgeInfoPerType.commit.edges,
-                                ports: [...edgeInfoPerType.commit.ports.values()],
-                            },
-                            {
-                                id: 'tree',
-                                width: 100,
-                                height: 100,
-                                fillHeight: true,
-                                layoutOptions: {
-                                    'elk.direction': 'RIGHT',
-                                    "elk.portConstraints": "FIXED_SIDE",
-                                    'portLabels.placement': "[INSIDE]",
-                                },
-                                labels: [label("Trees", true)],
-                                fill: '#FDD',
-                                children: objects
-                                    .filter(object => object.type === 'tree')
-                                    .map(object => {
-                                        const oidLabel = label(object.oid.slice(0, 7));
-                                        const width = Math.max(...[
-                                            oidLabel.width,
-                                            ...object.object.map(treeEntry => label(treeEntry.path).width)
-                                        ]);
-                                        const totalHeight = [
-                                            oidLabel.height,
-                                            ...object.object.map(treeEntry => label(treeEntry.path).height)
-                                        ].reduce((a, b) => a + b, 0);
-                                        return {
-                                            id: object.oid,
-                                            fill: '#FAA',
-                                            width: width + 10,
-                                            height: totalHeight + 20,
-                                            cssId: 'object-' + object.oid,
-                                            cssClass: 'object',
-                                            layoutOptions: {
-                                                "elk.portConstraints": "FIXED_ORDER",
-                                                'portLabels.placement': "[INSIDE]",
-                                            },
-                                            ports: [
-                                                ...object.object.map(treeEntry =>
-                                                ({
-                                                    id: port_id_for_tree_entry(object.oid, treeEntry) + '-dummy',
-                                                    labels: [{ ...label(treeEntry.path), width: 0, text: '' }],
-                                                    layoutOptions: {
-                                                        "elk.port.side": "WEST",
-                                                    },
-                                                })),
-                                                {
-                                                    id: port_id_for_incoming(object.oid),
-                                                    labels: [oidLabel],
-                                                    layoutOptions: {
-                                                        "elk.port.side": "WEST",
-                                                    },
-                                                },
-                                                {
-                                                    id: port_id_for_incoming(object.oid) + '-dummy',
-                                                    labels: [{ ...oidLabel, width: 0, text:'' }],
-                                                    layoutOptions: {
-                                                        "elk.port.side": "EAST",
-                                                    },
-                                                },
-                                                ...object.object.map(treeEntry =>
-                                                ({
-                                                    id: port_id_for_tree_entry(object.oid, treeEntry),
-                                                    labels: [{ ...label(treeEntry.path), width }],
-                                                    layoutOptions: {
-                                                        "elk.port.side": "EAST",
-                                                    },
-                                                })),
-                                            ],
-                                        };
-                                    }),
-                                edges: edgeInfoPerType.tree.edges,
-                                ports: [...edgeInfoPerType.tree.ports.values()],
-                            },
-                            {
-                                id: 'blob',
-                                width: 100,
-                                height: 100,
-                                fillHeight: true,
-                                layoutOptions: {
-                                    'elk.direction': 'LEFT',
-                                    "elk.portConstraints": "FIXED_SIDE",
-                                },
-                                labels: [label("Blobs", true)],
-                                fill: '#DFF',
-                                children: objects
-                                    .filter(object => object.type === 'blob')
-                                    .map(object =>
-                                    ({
-                                        id: object.oid,
-                                        width: label([...Array(BLOB_MAX_CHARS).join(' ')]).width + 20,
-                                        height: label([...Array(BLOB_MAX_CHARS).join(' ')]).height * 2 + 20,
-                                        fill: 'cyan',
-                                        cssId: 'object-' + object.oid,
-                                        cssClass: 'object',
+                }
+            });
 
-                                        labels: [label(object.oid.slice(0, 7).padEnd(BLOB_MAX_CHARS)), label(decoder.decode(object.object).slice(0, BLOB_MAX_CHARS).padEnd(BLOB_MAX_CHARS))],
-                                        ports: [{
-                                            id: port_id_for_incoming(object.oid),
-                                            layoutOptions: {
-                                                "elk.port.side": "WEST",
-                                            },
-                                        }],
-                                    })),
-                                edges: edgeInfoPerType.blob.edges,
-                                ports: [...edgeInfoPerType.blob.ports.values()],
-                            },
-                        ],
-                        edges:
-                        [
-                            ...iota(TYPES.length - 1).map(i => (
-                               {
-                                   id: `${TYPES[i]}-${TYPES[i + 1]}`,
-                                   sources: [TYPES[i]],
-                                   targets: [TYPES[i + 1]],
-                                   hidden: true,
-                               }
-                            )),
-
-                            // ...objects
-                            //     .filter(({ type }) => type === 'tree')
-                            //     .flatMap(object => object.object
-                            //         .filter(treeEntry => treeEntry.type !== 'tree')
-                            //         .map(treeEntry => tree_entry_edge(object.oid, treeEntry))
-                            //     ),
-                            // ...objects
-                            //     .filter(({ type }) => type === 'commit')
-                            //     .map(object =>
-                            //     ({
-                            //         id: port_id_for_commit_tree(object.oid),
-                            //         sources: [port_id_for_commit_tree(object.oid)],
-                            //         targets: [object.object.tree],
-                            //     })),
-                            // ...objects
-                            //     .filter(object => object.type === 'tag')
-                            //     .filter(object => object.object.type !== 'tag')
-                            //     .map(object => tag_edge(object)),
-                            ...outsideEdges,
-                        ],
-                    },
-                    {
-                        id: 'refs',
-                        labels: [label(".git/refs", true)],
-                        width: 100,
-                        height: 100,
-                        fillHeight: true,
-                        layoutOptions: {
-                            //'layerlayering.layerChoiceConstraint': '2',
-                            'partitioning.partition': '2',
-                        },
-                        ports: [
-                            {
-                                id: 'refs-right',
-                                layoutOptions: {
-                                    "elk.port.side": "EAST",
-                                },
-                            }
-                        ],
-                    },
-                ],
-                edges: [
-                    {
-                        id: 'index-objects',
-                        sources: ['index-left'],
-                        targets: ['objects-right'],
-                        hidden: true,
-                    },
-                    {
-                        id: 'objects-refs',
-                        sources: ['objects-left'],
-                        targets: ['refs-right'],
-                        hidden: true,
-                    },
-                ]
-                //edges: objects.flatMap(object => EDGES_FOR_TYPE[object.type](object)),
-            };
-            window.graph = graph;
             (async () => {
-
-                const elk = new ELK({
-                    defaultLayoutOptions: {
-                        "elk.portConstraints": "FIXED_SIDE",
-                        //"spacing.portsSurrounding": "[top=0.0, left=0.0, bottom=0.0, right=0.0]",
-                        //"considerModelOrder.components": "MODEL_ORDER"
-                    }
-                    //'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-                });
-                const graphWithLayout = await elk.layout(graph);
-
-                const FILL_X_PADDING = 10;
-                const FILL_Y_PADDING_TOP = 40;
-                const FILL_Y_PADDING_BOTTOM = 10;
-
-                const toSvg = (node, parent, fillXOffset, fillYOffset) => `
-                    <g
-                        ${node.cssClass ? `class="${node.cssClass}"` : ''}
-                        ${node.cssId ? `id="${node.cssId}"` : ''}
-                    >
-                        <g transform="translate(${node.fillWidth ? FILL_X_PADDING - fillXOffset : node.x}, ${node.fillHeight ? FILL_Y_PADDING_TOP - fillYOffset : node.y})">
-                            <rect
-                                width=${node.fillWidth ? parent?.width - 2 * FILL_X_PADDING ?? node.width : node.width}
-                                height=${node.fillHeight ? parent?.height - FILL_Y_PADDING_TOP - FILL_Y_PADDING_BOTTOM ?? node.height : node.height}
-                                stroke="black"
-                                stroke-width="1"
-                                fill="${node.fill ?? 'white'}"
-                                style="filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.5))"
-                            />
-                            ${node.labels?.map(label => `
-                                ${label.box ? `
-                                    <rect
-                                        x=${label.isContainer ? 0 : label.x}
-                                        y=${label.isContainer ? 0 : label.y}
-                                        width=${label.isContainer ?
-                                            (node.fillWidth ? parent?.width - 2 * FILL_X_PADDING ?? node.width : node.width)
-                                            : label.width}
-                                        height=${label.isContainer ? label.y * 2 + label.height : label.height}
-                                        stroke="black"
-                                        stroke-width="1"
-                                        fill="${label.isContainer ? 'black' : 'white'}"
-                                    />
-                                ` : ''}
-                                <text style='font: ${textMeasurer.font}; fill: ${label.isContainer ? 'white' : 'black'}' x="${label.x + label.width / 2}" y="${label.y + label.height / 2}" text-anchor="middle" dominant-baseline="middle">${label.text ?? ''}</text>
-                            `).join('') ?? ''}
-                        </g>
-                        <g transform="translate(${node.x}, ${node.y})">
-                            ${node.children?.map(child => toSvg(child, node, node.fillWidth ? node.x - FILL_X_PADDING + fillXOffset : 0, node.fillHeight ? node.y - FILL_Y_PADDING_TOP + fillYOffset : 0)).join('') ?? ''}
-                            ${node.ports?.map(child => toSvg(child, node, node.fillWidth ? node.x - FILL_X_PADDING + fillXOffset : 0, node.fillHeight ? node.y - FILL_Y_PADDING_TOP + fillYOffset : 0)).join('') ?? ''}
-                            ${node.edges?.filter(edge => !edge.hidden).map(edge => `
-                                ${edge.sections?.map(section => `
-                                    <polyline
-                                        stroke="black"
-                                        stroke-width="1"
-                                        fill="none"
-                                        ${edge.cssClass ? `class="${edge.cssClass}"` : ''}
-                                        ${edge.cssId ? `id="${edge.cssId}"` : ''}
-                                        ${edge.isEnd ? `marker-end="url(#arrow)"` : ''}
-                                        points="${[section.startPoint, ...(section.bendPoints ?? []), section.endPoint].map(point => `${point.x},${point.y}`).join(' ')}"
-                                    />
-                                `).join('') ?? ''}
-                                ${edge.junctionPoints?.map(junction => `
-                                    <circle
-                                        ${edge.cssClass ? `class="${edge.cssClass}"` : ''}
-                                        ${edge.cssId ? `id="${edge.cssId}"` : ''}
-                                        cx=${junction.x}
-                                        cy=${junction.y}
-                                        r="3"
-                                        fill="black"
-                                    />
-                                `).join('') ?? ''}
-                            `).join('') ?? ''}
-                        </g>
-                    </g>
-                `;
-
-                document.getElementById('graph').innerHTML = `
-                    <style>
-                        ${objects.map(object => `
-                            #graph:has(.object:hover):not(:has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')}))) #object-${object.oid} {
-                                opacity: 0.2;
-                            }
-                            #graph:has(.object:hover):has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')})) #object-${object.oid} > g > rect {
-                                stroke: blue;
-                                stroke-width: 2px;
-                            }
-                            #graph:has(.object:hover):not(:has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')}))) .edge-from-${object.oid} {
-                                opacity: 0.2;
-                            }
-                            #graph:has(.object:hover):has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')})) polyline.edge-from-${object.oid} {
-                                stroke: blue;
-                                stroke-width: 2px;
-                            }
-                            #graph:has(.object:hover):has(:where(${[...reachableTo(object.oid)].map(x => `#object-${x}:hover`).join(',')})) circle.edge-from-${object.oid} {
-                                fill: blue;
-                            }
-                        `).join('\n')}
-                    </style>
-                    <svg width="${graphWithLayout.width + 20}" height="${graphWithLayout.height + 20}">
-                        <defs>
-                            <marker id="arrow" viewBox="-5 0 5 10" orient="auto-start-reverse" refX="5" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse">
-                                <path d="M -5 0 L 5 5 L -5 10 z" fill="black" />
-                            </marker>
-                        </defs>
-                        <g transform="translate(10 10)">
-                            ${toSvg(graphWithLayout, null, 0, 0)}
-                        </g>
-                    </svg>
-                `;
+                await visualize(objects, elk, refs, indexEntries);
             })();
         </script>
     </body>
