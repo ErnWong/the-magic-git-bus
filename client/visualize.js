@@ -188,7 +188,7 @@ export default async function visualize(objects, elk, refs, indexEntries)
         } else {
             has_ref_object_edge = true;
             const refPortId = `${ref}-port`;
-            const targetPortId = port_id_for_incoming(target);
+            const targetPortId = type === 'commit' ? port_id_for_commit_from_tag(target) : port_id_for_incoming(target);
             addPortOrEdge(refPorts, {
                 id: refPortId,
                 layoutOptions: {
