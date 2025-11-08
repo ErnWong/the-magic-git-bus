@@ -14,8 +14,12 @@
       url = "github:nix-community/nixos-generators/1.8.0";
       inputs.nixpkgs.follows = "nixpkgs-i686";
     };
+    fsex300 = {
+      url = "github:thearchitect/fsex-webfont";
+      flake = false;
+    };
   };
-  outputs = { self, nixpkgs, utils, v86, nixos-generators, nixpkgs-i686 }:
+  outputs = { self, nixpkgs, utils, v86, nixos-generators, nixpkgs-i686, fsex300 }:
     utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
@@ -28,7 +32,7 @@
           inherit system pkgs nixpkgs v86 vmImage;
         };
         server = import ./server/default.nix {
-          inherit system pkgs nixpkgs v86 vmImage vmStates;
+          inherit system pkgs nixpkgs v86 vmImage vmStates fsex300;
         };
       in
       {

@@ -12,6 +12,22 @@
         "url": "https://repo1.maven.org/maven2/com/google/javascript/closure-compiler/v20210601/closure-compiler-v20210601.jar"
       }
     },
+    "fsex300": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1561561400,
+        "narHash": "sha256-hSvvVPxzUT3dkakwF9vrKXwQRkV7xB/xtVtwzoBOhB8=",
+        "owner": "thearchitect",
+        "repo": "fsex-webfont",
+        "rev": "792598f5e4b0a0a6b48c6af8686ce1bf401f3baa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "thearchitect",
+        "repo": "fsex-webfont",
+        "type": "github"
+      }
+    },
     "nixlib": {
       "locked": {
         "lastModified": 1754788789,
@@ -83,6 +99,7 @@
     },
     "root": {
       "inputs": {
+        "fsex300": "fsex300",
         "nixos-generators": "nixos-generators",
         "nixpkgs": "nixpkgs",
         "nixpkgs-i686": "nixpkgs-i686",

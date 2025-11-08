@@ -1,4 +1,4 @@
-{ system, pkgs, nixpkgs, v86, vmImage, vmStates }:
+{ system, pkgs, nixpkgs, v86, vmImage, vmStates, fsex300 }:
   let
     libv86 = v86.packages.${system}.libv86;
     bios = v86.packages.${system}.seabios;
@@ -44,6 +44,12 @@
           url = "https://cdn.jsdelivr.net/npm/elkjs@0.11.0/lib/elk.bundled.js";
           hash = "sha256-y/YbAYLpCF023NWzkvV8yBYnMWmsQL3oC1K4CERMXPg=";
         }}" ./elk.js
+        ln -s "${fsex300}/fsex300.css" ./
+        ln -s "${fsex300}/fsex300.eot" ./
+        ln -s "${fsex300}/fsex300.svg" ./
+        ln -s "${fsex300}/fsex300.ttf" ./
+        ln -s "${fsex300}/fsex300.woff" ./
+        ln -s "${fsex300}/fsex300.woff2" ./
         ''
         +
         # TODO Package this properly

@@ -7,3 +7,7 @@
 #vm .xterm-viewport {
     scrollbar-width: none;
 }
+
+svg * {
+    shape-rendering: crispEdges;
+}
