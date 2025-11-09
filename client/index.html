@@ -5,9 +5,19 @@
         <script src="/xterm.js"></script>
         <script src="/isomorphic-git.js"></script>
         <script src="/elk.js"></script>
+        <script type="importmap">
+            {
+                "imports": {
+                    "railroad-diagrams": "https://cdn.jsdelivr.net/gh/tabatkins/railroad-diagrams@ea9a12393bbaa2c802b0449fd5bdf34b6868b83c/railroad.js"
+                }
+            }
+        </script>
         <link rel="stylesheet" href="/xterm.css">
         <link rel="stylesheet" href="/fsex300.css">
         <link rel="stylesheet" href="/style.css">
+        <link href="https://cdn.jsdelivr.net/npm/prismjs@v1.30.0/themes/prism.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/gh/tabatkins/railroad-diagrams@ea9a12393bbaa2c802b0449fd5bdf34b6868b83c/railroad.css" rel="stylesheet" />
     </head>
     <body>
         <nav>
@@ -20,9 +30,136 @@
                     <h1>Objects</h1>
                     <section>
                         <h1>Blob</h1>
+                        <p>Objects that store file contents.</p>
+                        <ol>
+                            <li>
+                                <h1>List all objects</h1>
+                                <p>We haven't added any yet, so we should see none.</p>
+                                <pre><code class="language-bash">
+                                    git cat-file --batch-check --batch-all-objects
+                                    ls .git/objects
+                                </code></pre>
+                            </li>
+                            <li>
+                                <h1>Create a file</h1>
+                                <pre><code class="language-bash">
+                                    echo hello world > myfile.txt
+                                </code></pre>
+                            </li>
+                            <li>
+                                <h1>Calculate its hash</h1>
+                                <pre><code class="language-bash">
+                                    git hash-object -t blob myfile.txt
+                                    # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad
+                                </code></pre>
+                                <p>Note it's not the direct sha1 sum of the file.</p>
+                                <pre><code class="language-bash">
+                                    cat myfile.txt | shasum
+                                    # 22596363b3de40b06f981fb85d82312e8c0ed511  -
+                                </code></pre>
+                                <p>Let's see why...</p>
+                            </li>
+                            <li>
+                                <h1>Add metadata to blob.</h1>
+                                <pre><code class="language-bash">
+                                    echo -e "blob 12\0hello world" > myblob
+                                </code></pre>
+                                <h2>Blob Anatomy</h2>
+                                <pre class="railroad-src">
+                                    Diagram(
+                                        Sequence(
+                                            Terminal("blob"),
+                                            Terminal("space"),
+                                            NonTerminal("number of bytes"),
+                                            Terminal("null"),
+                                            NonTerminal("file contents"),
+                                        )
+                                    )
+                                </pre>
+                            </li>
+                            <li>
+                                <h1>Compress blob.</h1>
+                                <pre><code class="language-bash">
+                                    pigz --keep --zlib myblob
+                                </code></pre>
+                            </li>
+                            <li>
+                                <h1>Hash the compressed blob.</h1>
+                                <pre><code class="language-bash">
+                                    cat myblob.zz | shasum
+                                    # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad  -
+                                </code></pre>
+                            </li>
+                            <li>
+                                <h1>Chuck it into the database.</h1>
+                                <pre><code class="language-bash">
+                                    mkdir .git/objects/3b
+                                    mv myblob.zz .git/objects/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad
+                                </code></pre>
+                            </li>
+                            <li>
+                                <h1>Enjoy your new domesticated blob.</h1>
+                                <pre><code class="language-bash">
+                                    git cat-file --batch-check --batch-all-objects
+                                    # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad blob 12
+
+                                    git cat-file -p 3b18e512dba79e4c8300dd08aeb37f8e728b8dad
+                                    # hello world
+                                </code></pre>
+                            </li>
+                            <li>
+                                <h1>Shortcut unlocked! Create a blob using <code class="language-bash">git hash-object -w</code></h1>
+                                <pre><code class="language-bash">
+                                    echo foobar > otherfile.txt
+                                    git hash-object -t blob -w otherfile.txt
+                                    # 323fae03f4606ea9991df8befbb2fca795e648fa
+
+                                    find .git/objects -type f
+                                </code></pre>
+                            </li>
+                        </ol>
                     </section>
                     <section>
                         <h1>Tree</h1>
+                        <ol>
+                            <li>
+                                <h1>Tree Anatomy</h2>
+                                <pre class="railroad-src">
+                                    Diagram(
+                                        OneOrMore(
+                                            Sequence(
+                                                NonTerminal("file mode"),
+                                                NonTerminal("filename"),
+                                                Terminal("null"),
+                                                NonTerminal("blob hash (20 bytes of sha1)"),
+                                            ),
+                                        )
+                                    )
+                                </pre>
+                            </li>
+                            <li>
+                                <h1>Create leaf tree with single file</h2>
+                                <pre><code class="language-bash">
+                                    echo -e -n "100644 copy.txt\0" > childtree
+                                    echo 3b18e512dba79e4c8300dd08aeb37f8e728b8dad | xxd -r -p >> childtree
+                                    git hash-object -t tree -w childtree
+                                    # 8209f53524b4818a6d18424613de08c1c6552f11
+                                </code></pre>
+                            </li>
+                            <li>
+                                <h1>Create parent tree with folders and files</h2>
+                                <pre><code class="language-bash">
+                                    echo -e -n "40000 folder\0" > mytree
+                                    echo 8209f53524b4818a6d18424613de08c1c6552f11 | xxd -r -p >> mytree
+                                    echo -e -n "100644 myfile.txt\0" >> mytree
+                                    echo 3b18e512dba79e4c8300dd08aeb37f8e728b8dad | xxd -r -p >> mytree
+                                    echo -e -n "100644 otherfile.txt\0" >> mytree
+                                    echo 323fae03f4606ea9991df8befbb2fca795e648fa | xxd -r -p >> mytree
+                                    git hash-object -t tree -w mytree
+                                    # 6db497f8ca5a8bf50591fd13beb12fc66dff1d31
+                                </code></pre>
+                            </li>
+                        </ol>
                     </section>
                     <section>
                         <h1>Commit</h1>
@@ -55,5 +192,25 @@
             </pre>
         </aside>
         <script type="module" src="/main.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@v1.30.0/components/prism-core.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@v1.30.0/plugins/autoloader/prism-autoloader.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/plugins/normalize-whitespace/prism-normalize-whitespace.min.js"></script>
+        <script type="module">
+            import rr from "railroad-diagrams";
+            Object.assign(window, rr);
+
+            Prism.plugins.NormalizeWhitespace.setDefaults({
+                "remove-trailing": true,
+                "remove-indent": true,
+                "left-trim": true,
+                "right-trim": true,
+            });
+
+            for (const railroad of document.getElementsByClassName('railroad-src')) {
+                railroad.after(eval(railroad.textContent).toSVG());
+                railroad.classList.add('railroad-generated');
+            }
+        </script>
     </body>
 </html>
