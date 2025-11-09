@@ -14,8 +14,6 @@
           fileset = nixpkgs.lib.fileset.unions [
             ./build-state-0-login.js
             ./state-builder.js
-            ./vmlinuz-linux.img
-            ./initramfs-linux.img
             ../config
           ];
         };
@@ -26,7 +24,7 @@
           ln -s "${libv86}" v86
           ln -s "${bios}" bios
           mkdir -p images
-          ln -s "${vmFs.rootfs}/fs" ./fs
+          ln -s "${vmFs.rootfs}" ./fs
           ln -s "${vmFs.rootfsJson}/fs.json" ./fs.json
           ./vm/build-state-0-login.js
         '';

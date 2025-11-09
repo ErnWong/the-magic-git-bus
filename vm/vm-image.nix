@@ -22,14 +22,13 @@
               "9pnet"
               "9pnet_virtio"
             ];
-            #boot.initrd.postDeviceCommands = ''
-            #  mount -t 9p -o trans=virtio,version=9p2000.L host9p /sysroot
-            #'';
-            fileSystems."/" = {
-              device = "host9p"; # Hardcoded tag in v86's 9p.js https://github.com/copy/v86/blob/db22e06746d7adfd3b8c01be29fd15dea4b3bd37/lib/9p.js#L188
-              fsType = "9p";
-              options = [ "trans=virtio,version=9p2000.L,cache=loose" ];
-            };
+            boot.initrd.postDeviceCommands = ''
+              mount -t 9p -o trans=virtio,version=9p2000.L host9p /sysroot
+            '';
+            # fileSystems."/" = {
+              # device = "/dev/";
+              # fstype = "9p";
+            # };
 
             networking.hostName = "gitbus";
 
