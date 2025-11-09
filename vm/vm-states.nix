@@ -1,4 +1,4 @@
-{ system, pkgs, nixpkgs, v86, vmImage }:
+{ system, pkgs, nixpkgs, v86, vmFs }:
   let
     libv86 = v86.packages.${system}.libv86;
     bios = v86.packages.${system}.seabios;
@@ -24,7 +24,8 @@
           ln -s "${libv86}" v86
           ln -s "${bios}" bios
           mkdir -p images
-          ln -s "${vmImage}/iso/nixos.iso" ./images
+          ln -s "${vmFs.rootfs}" ./fs
+          ln -s "${vmFs.rootfsJson}/fs.json" ./fs.json
           ./vm/build-state-0-login.js
         '';
         installPhase = ''
@@ -52,7 +53,8 @@
           ln -s "${libv86}" v86
           ln -s "${bios}" bios
           mkdir -p images
-          ln -s ${vmImage}/iso/nixos.iso ./images
+          ln -s "${vmFs.rootfs}" ./fs
+          ln -s "${vmFs.rootfsJson}/fs.json" ./fs.json
           ln -s ${loggedInState}/0-login.bin ./images
           ./vm/build-state-1-git.js
         '';

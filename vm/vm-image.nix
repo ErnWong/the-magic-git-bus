@@ -12,13 +12,30 @@
 
             # Always use serial port
             boot.kernelParams = [ "console=ttyS0,115200n8" ];
+            boot.loader.grub.enable = lib.mkForce false;
+            boot.loader.systemd-boot.enable = lib.mkForce false;
+            formatAttr = "tarball";
+            fileExtension = ".tar.xz";
+            boot.initrd.availableKernelModules = [
+              "virtio_pci"
+              "9p"
+              "9pnet"
+              "9pnet_virtio"
+            ];
+            boot.initrd.postDeviceCommands = ''
+              mount -t 9p -o trans=virtio,version=9p2000.L host9p /sysroot
+            '';
+            # fileSystems."/" = {
+              # device = "/dev/";
+              # fstype = "9p";
+            # };
 
             networking.hostName = "gitbus";
 
             # Automatically log in at the virtual consoles.
             services.getty.autologinUser = "root";
 
-            boot.supportedFilesystems = lib.mkForce [ ];
+            #boot.supportedFilesystems = lib.mkForce [ ];
   
             # If you don't need non-free firmware
             hardware.enableRedistributableFirmware = lib.mkForce false;
@@ -38,7 +55,7 @@
             system.extraDependencies = lib.mkForce [];
 
             # Don't append "Installer" to grub menu entries. We're not an installer iso.
-            isoImage.appendToMenuLabel = "";
+            #isoImage.appendToMenuLabel = "";
 
             services.openssh.enable = lib.mkForce false;
 
@@ -190,5 +207,7 @@
       #format = "raw"; # can't open fsimg nixos.raw: Value too large for defined data type
       # Not quite applicable but similar: https://github.com/NixOS/nixpkgs/pull/82718
       # So instead we generate a live iso which seems to work.
-      format = "iso";
+      #format = "iso";
+      format = "lxc";
+
     }
