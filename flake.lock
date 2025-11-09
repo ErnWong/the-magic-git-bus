@@ -223,11 +223,11 @@
         "v86-src": "v86-src"
       },
       "locked": {
-        "lastModified": 1762663650,
-        "narHash": "sha256-lemruWdTiRoS3APes0gCRVy7ld5mJreElC+sxw1n6tE=",
+        "lastModified": 1760829352,
+        "narHash": "sha256-ilx34+IJ+nOAVxgSCETQM/KKDEarBs8+iUOfwcZh014=",
         "owner": "ErnWong",
         "repo": "v86-nix",
-        "rev": "570f479589938704541947eb620e0c1819726365",
+        "rev": "4552975d1e4c8b86f97ea8ce99aec2f5506f368e",
         "type": "github"
       },
       "original": {
