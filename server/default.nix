@@ -7,6 +7,7 @@
       name = "the-magic-git-bus";
       nativeBuildInputs = [
         pkgs.makeWrapper
+        pkgs.zstd
       ];
       src = nixpkgs.lib.fileset.toSource {
         root = ./..;
@@ -26,16 +27,16 @@
         ln -s "${libv86}" v86
         ln -s "${bios}" bios
         mkdir -p images
-        ln -s "${vmImage}/iso/nixos.iso" ./images
-        ln -s "${vmStates.loggedInState}/0-login.bin" ./images
-        ln -s "${vmStates.gitStates}/1-git-init.bin" ./images
-        ln -s "${vmStates.gitStates}/2-git-blobs.bin" ./images
-        ln -s "${vmStates.gitStates}/3-git-trees.bin" ./images
-        ln -s "${vmStates.gitStates}/4-git-commits.bin" ./images
-        ln -s "${vmStates.gitStates}/5-git-index.bin" ./images
-        ln -s "${vmStates.gitStates}/6-git-tags.bin" ./images
-        ln -s "${vmStates.gitStates}/7-git-branches.bin" ./images
-        ln -s "${vmStates.gitStates}/8-git-annotated-tags.bin" ./images
+        zstd -19 --keep "${vmImage}/iso/nixos.iso" -o ./images/nixos.iso
+        zstd -19 --keep "${vmStates.loggedInState}/0-login.bin" -o ./images/0-login.bin.zst
+        zstd -19 --keep "${vmStates.gitStates}/1-git-init.bin" -o ./images/1-git-init.bin.zst
+        zstd -19 --keep "${vmStates.gitStates}/2-git-blobs.bin" -o ./images/2-git-blobs.bin.zst
+        zstd -19 --keep "${vmStates.gitStates}/3-git-trees.bin" -o ./images/3-git-trees.bin.zst
+        zstd -19 --keep "${vmStates.gitStates}/4-git-commits.bin" -o ./images/4-git-commits.bin.zst
+        zstd -19 --keep "${vmStates.gitStates}/5-git-index.bin" -o ./images/5-git-index.bin.zst
+        zstd -19 --keep "${vmStates.gitStates}/6-git-tags.bin" -o ./images/6-git-tags.bin.zst
+        zstd -19 --keep "${vmStates.gitStates}/7-git-branches.bin" -o ./images/7-git-branches.bin.zst
+        zstd -19 --keep "${vmStates.gitStates}/8-git-annotated-tags.bin" -o ./images/8-git-annotated-tags.bin.zst
         ln -s "${pkgs.fetchurl { # TODO Use npm the nix way
           url = "https://cdn.jsdelivr.net/npm/xterm@5.2.1/lib/xterm.min.js";
           hash = "sha256-ZZr3ei46ADqAYwr6ktRTx/IVPVh8ti9goKoQttkdnzY=";

@@ -50,8 +50,8 @@ export default function buildState({ initialState, script })
 
     async function save(filename)
     {
-        emulator.serial0_send("sync;echo 3 >/proc/sys/vm/drop_caches\n");
-        await delay(10 * 1000);
+        //emulator.serial0_send("sync;echo 3 >/proc/sys/vm/drop_caches\n");
+        //await delay(10 * 1000);
         const s = await emulator.save_state();
         const output_file = new URL(filename, IMAGES_DIR);
         await fs.writeFile(output_file, new Uint8Array(s));

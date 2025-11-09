@@ -7,7 +7,7 @@ const METHOD = '9p'; // '9p' | 'inotify'
 
 const emulator = new V86({
     ...vmConfig,
-    initial_state: { url: toV86Url(new URL("1-git-init.bin", IMAGES_DIR)) },
+    initial_state: { url: toV86Url(new URL("1-git-init.bin.zst", IMAGES_DIR)) },
     serial_container_xtermjs: document.getElementById('vm'),
 });
 window.emulator = emulator;
@@ -20,11 +20,6 @@ emulator.add_listener("emulator-started", () => {
 });
 
 const states = [
-    {
-        name: '0-login',
-        downloading: true,
-        postLoadCommand: 'clear\n',
-    },
     {
         name: '1-git-init',
         downloading: true,
@@ -82,7 +77,7 @@ for(const state of states)
     });
     button.disabled = true;
     (async () => {
-        const buffer = await (await fetch(new URL(`${state.name}.bin`, IMAGES_DIR))).arrayBuffer();
+        const buffer = await (await fetch(new URL(`${state.name}.bin.zst`, IMAGES_DIR))).arrayBuffer();
         button.addEventListener('click', async () => {
             restoring_state = true;
             update();
