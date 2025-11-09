@@ -2,11 +2,10 @@
   let
     pkgs-i686 = nixpkgs-i686.legacyPackages.i686-linux;
     method = "9p"; # "9p" | "inotify"
-  in
-    nixos-generators.nixosGenerate {
+    generate = extra: nixos-generators.nixosGenerate {
       pkgs = nixpkgs-i686.legacyPackages.i686-linux;
       modules = [
-        ({ lib, modulesPath, ... }: {
+        ({ lib, modulesPath, config, ... }: {
             system.stateVersion = "23.05";
             imports = [ "${modulesPath}/profiles/minimal.nix" ];
 
@@ -202,7 +201,7 @@
             programs = {
               git.enable = true;
             };
-        })
+        } // (extra config))
       ];
       # Currently failing to generate a hard drive raw image:
       #format = "raw"; # can't open fsimg nixos.raw: Value too large for defined data type
@@ -211,4 +210,22 @@
       #format = "iso";
       format = "lxc";
 
+    };
+  in
+    {
+      tar = generate (config: {});
+      kernel = generate (config: {
+        image.extension = "bin";
+        image.fileName = "bzimage.bin";
+        #image.filePath = "kernel/${config.image.fileName}";
+        image.filePath = "kernel/bzimage.bin";
+        system.build.image = config.system.build.kernel;
+      });
+      initrd = generate (config: {
+        image.extension = "bin";
+        image.fileName = "initrd";
+        #image.filePath = "initrd/${config.image.fileName}";
+        image.filePath = "initrd/initrd.bin";
+        system.build.image = config.system.build.initialRamdisk;
+      });
     }
