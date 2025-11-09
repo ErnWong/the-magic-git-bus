@@ -5,14 +5,16 @@ export default {
     bios: { url: toV86Url(new URL("seabios.bin", BIOS_DIR)) },
     vga_bios: { url: toV86Url(new URL("vgabios.bin", BIOS_DIR)) },
     autostart: true,
-    memory_size: 128 * 1024 * 1024,
+    memory_size: 512 * 1024 * 1024,
     vga_memory_size: 1,
     //cdrom: { url: toV86Url(new URL("nixos.iso", IMAGES_DIR)) },
     filesystem: {
         baseurl: toV86Url(new URL("fs", ROOT)),
         basefs: toV86Url(new URL("fs.json", ROOT)),
     },
-    bzimage_initrd_from_filesystem: true,
+    //bzimage_initrd_from_filesystem: true,
+    bzimage: { url: toV86Url(new URL("./vm/vmlinuz-linux.img", ROOT)) },
+    initrd: { url: toV86Url(new URL("./vm/initramfs-linux.img", ROOT)) },
     cmdline: [
         "rw",
         "root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose",
