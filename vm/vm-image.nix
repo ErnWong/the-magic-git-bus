@@ -18,125 +18,78 @@
             # Automatically log in at the virtual consoles.
             services.getty.autologinUser = "root";
 
-            boot.supportedFilesystems = lib.mkForce [ ];
-  
-            # If you don't need non-free firmware
-            hardware.enableRedistributableFirmware = lib.mkForce false;
-
-            # If you don't want the docs
-            documentation.enable = lib.mkForce false;
-            documentation.nixos.enable = lib.mkForce false;
-
-            # If you don't need wifi
-            networking.wireless.enable = lib.mkForce false;
-
-            networking.useDHCP = false;
-            networking.interfaces = {};
-
-            # This is used to pull in stdenv to speed up the installation, so removing it
-            # means you have to download it
-            system.extraDependencies = lib.mkForce [];
-
             # Don't append "Installer" to grub menu entries. We're not an installer iso.
             isoImage.appendToMenuLabel = "";
 
-            services.openssh.enable = lib.mkForce false;
-
-            #https://sidhion.com/blog/nixos_server_issues
-            nix.enable = false;
-            nixpkgs.overlays = [
-            (
-              self: super:
-              {
-                dbus = super.dbus.override {
-                  systemdMinimal = self.systemd;
-                };
-              }
-            )
-            ];
-            security.sudo.enable = false;
-            # disabledModules = [ "security/wrappers/default.nix" ];
-            # options.security = {
-            #   wrappers = lib.mkOption {
-            #     type = lib.types.attrs;
-            #     default = { };
-            #   };
-            #   wrapperDir = lib.mkOption {
-            #     type = lib.types.path;
-            #     default = "/run/wrappers/bin";
-            #   };
-            # };
-
             environment.systemPackages = [
-              #(pkgs-i686.vim-full.customize {
-              #  vimrcConfig.packages.myVimPackage = {
-              #    start = [
-              #      pkgs-i686.vimPlugins.fugitive
-              #      pkgs-i686.vimPlugins.rhubarb
-              #      pkgs-i686.vimPlugins.vim-gitgutter
-              #      pkgs-i686.vimPlugins.vim-bufkill
-              #      pkgs-i686.vimPlugins.gruvbox
-              #      pkgs-i686.vimPlugins.vim-airline
-              #      pkgs-i686.vimPlugins.vim-airline-themes
-              #    ];
-              #  };
-              #  vimrcConfig.customRC = ''
-              #    set nocompatible
-              #    inoremap jk <esc>
-              #    nnoremap <space> :
-              #    vnoremap <space> :
-              #    nnoremap <C-c> :BD<cr>
-              #    nnoremap <C-w>h :wincmd v<cr>
-              #    nnoremap <C-w>j :wincmd s<cr>:wincmd k<cr>
-              #    nnoremap <C-w>k :wincmd s<cr>
-              #    nnoremap <C-w>l :wincmd v<cr>:wincmd l<cr>
+              (pkgs-i686.vim-full.customize {
+                vimrcConfig.packages.myVimPackage = {
+                  start = [
+                    pkgs-i686.vimPlugins.fugitive
+                    pkgs-i686.vimPlugins.rhubarb
+                    pkgs-i686.vimPlugins.vim-gitgutter
+                    pkgs-i686.vimPlugins.vim-bufkill
+                    pkgs-i686.vimPlugins.gruvbox
+                    pkgs-i686.vimPlugins.vim-airline
+                    pkgs-i686.vimPlugins.vim-airline-themes
+                  ];
+                };
+                vimrcConfig.customRC = ''
+                  set nocompatible
+                  inoremap jk <esc>
+                  nnoremap <space> :
+                  vnoremap <space> :
+                  nnoremap <C-c> :BD<cr>
+                  nnoremap <C-w>h :wincmd v<cr>
+                  nnoremap <C-w>j :wincmd s<cr>:wincmd k<cr>
+                  nnoremap <C-w>k :wincmd s<cr>
+                  nnoremap <C-w>l :wincmd v<cr>:wincmd l<cr>
 
-              #    set nobackup
-              #    set nowritebackup
+                  set nobackup
+                  set nowritebackup
 
-              #    let g:gruvbox_italic = 1
-              #    let g:gruvbox_bold = 1
-              #    colorscheme gruvbox
-              #    set background=dark
-              #    set termguicolors
-              #    set t_8f=[38;2;%lu;%lu;%lum " Needed in tmux and v86 xtermjs for setting foreground color (or else invisible cursor and buggy background)
-              #    set t_8b=[48;2;%lu;%lu;%lum " Needed in tmux and v86 xtermjs for setting background color
-              #    set t_ZH=[3m " Italics
-              #    set t_ZR=[23m " End italics
-              #    syntax on
+                  let g:gruvbox_italic = 1
+                  let g:gruvbox_bold = 1
+                  colorscheme gruvbox
+                  set background=dark
+                  set termguicolors
+                  set t_8f=[38;2;%lu;%lu;%lum " Needed in tmux and v86 xtermjs for setting foreground color (or else invisible cursor and buggy background)
+                  set t_8b=[48;2;%lu;%lu;%lum " Needed in tmux and v86 xtermjs for setting background color
+                  set t_ZH=[3m " Italics
+                  set t_ZR=[23m " End italics
+                  syntax on
 
-              #    let g:airline_theme='gruvbox'
-              #    let g:airline#extensions#tabline#enabled = 1
-              #    let g:airline#extensions#tabline#left_sep = '''
-              #    let g:airline#extensions#tabline#left_alt_sep = '│'
+                  let g:airline_theme='gruvbox'
+                  let g:airline#extensions#tabline#enabled = 1
+                  let g:airline#extensions#tabline#left_sep = '''
+                  let g:airline#extensions#tabline#left_alt_sep = '│'
 
-              #    set cursorline
-              #    set number
-              #    set numberwidth=4
-              #    set signcolumn=number
-              #    set laststatus=2
-              #    set noshowmode
+                  set cursorline
+                  set number
+                  set numberwidth=4
+                  set signcolumn=number
+                  set laststatus=2
+                  set noshowmode
 
-              #    set mouse=a
-              #  '';
-              #})
-              #pkgs-i686.nano
-              #((pkgs-i686.emacsPackagesFor pkgs-i686.emacs).emacsWithPackages (
-              #  epkgs: [epkgs.magit]
-              #))
+                  set mouse=a
+                '';
+              })
+              pkgs-i686.nano
+              ((pkgs-i686.emacsPackagesFor pkgs-i686.emacs).emacsWithPackages (
+                epkgs: [epkgs.magit]
+              ))
 
               # msedit is new and didn't exist in the older nixpkgs version
-              #nixpkgs.legacyPackages.i686-linux.msedit
+              nixpkgs.legacyPackages.i686-linux.msedit
 
               # In case the user gets curious
-              #pkgs-i686.neofetch
-              #nixpkgs.legacyPackages.i686-linux.fastfetch
-              #pkgs-i686.hyfetch
-              #pkgs-i686.sl
-              #pkgs-i686.cowsay
+              pkgs-i686.neofetch
+              nixpkgs.legacyPackages.i686-linux.fastfetch
+              pkgs-i686.hyfetch
+              pkgs-i686.sl
+              pkgs-i686.cowsay
 
               # Important for the git tutorial
-              pkgs-i686.unixtools.xxd
               pkgs-i686.pigz # For compressing objects into zlib stream
 
             ] ++ (if method == "inotify" then [(pkgs-i686.stdenv.mkDerivation {
