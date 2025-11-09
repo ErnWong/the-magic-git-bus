@@ -28,11 +28,8 @@
         vmImage = import ./vm/vm-image.nix {
           inherit nixpkgs nixpkgs-i686 nixos-generators;
         };
-        vmFs = import ./vm/vm-fs.nix {
-          inherit system pkgs v86 vmImage;
-        };
         vmStates = import ./vm/vm-states.nix {
-          inherit system pkgs nixpkgs v86 vmFs;
+          inherit system pkgs nixpkgs v86 vmImage;
         };
         server = import ./server/default.nix {
           inherit system pkgs nixpkgs v86 vmImage vmStates fsex300;
@@ -40,7 +37,7 @@
       in
       {
         packages = {
-          inherit vmImage vmFs vmStates server;
+          inherit vmImage vmStates server;
         };
         defaultPackage = server;
       }

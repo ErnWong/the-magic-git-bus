@@ -1,4 +1,4 @@
-import { IMAGES_DIR, BIOS_DIR, ROOT, toV86Url } from "./paths.js";
+import { IMAGES_DIR, BIOS_DIR, toV86Url } from "./paths.js";
 
 export default {
     wasm_path: "./v86/v86.wasm",
@@ -7,17 +7,8 @@ export default {
     autostart: true,
     memory_size: 128 * 1024 * 1024,
     vga_memory_size: 1,
-    //cdrom: { url: toV86Url(new URL("nixos.iso", IMAGES_DIR)) },
-    filesystem: {
-        baseurl: toV86Url(new URL("fs", ROOT)),
-        basefs: toV86Url(new URL("fs.json", ROOT)),
-    },
-    bzimage_initrd_from_filesystem: true,
-    cmdline: [
-        "rw",
-        "root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose",
-        "console=ttyS0"
-    ].join(" "),
+    cdrom: { url: toV86Url(new URL("nixos.iso", IMAGES_DIR)) },
+    filesystem: {}, // Empty 9p filesystem
     uart1: true, // For guest-host communications about git state
     log_level: 0, // LOG_NONE
 };
