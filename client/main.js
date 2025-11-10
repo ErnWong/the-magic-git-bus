@@ -205,11 +205,7 @@ if(METHOD === '9p')
             }
         });
 
-        let previous = {
-            oidSet: new Set(),
-            refSet: new Set(),
-            indexSet: new Set(),
-        };
+        let previous = null;
 
         const setEquals = (a, b) => a.size === b.size && [...a].every(x => b.has(x));
 
@@ -238,7 +234,7 @@ if(METHOD === '9p')
             const refSet = new Set(refs.map(ref => `${ref.ref}==>${ref.target}`));
             const indexSet = new Set(indexEntries.map(entry => `${entry.path}==>${entry.oid}`));
 
-            if (setEquals(oidSet, previous.oidSet) && setEquals(refSet, previous.refSet) && setEquals(indexSet, previous.indexSet)) {
+            if (previous && setEquals(oidSet, previous.oidSet) && setEquals(refSet, previous.refSet) && setEquals(indexSet, previous.indexSet)) {
                 return;
             }
 
