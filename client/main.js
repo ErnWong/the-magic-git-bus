@@ -218,8 +218,8 @@ if(METHOD === '9p')
             const objectById = new Map(objects.map(object => [object.oid, object]));
             const pathExists = path => emulator.fs9p.SearchPath(path).id !== -1;
             const refs = await Array.fromAsync([
-                ...(pathExists('.git/HEAD') ? ['HEAD'] : []), // Ideally we should catch error later to avoid race, but I can't seem to catch error.
-                ...(pathExists('.git/refs') ? (await git.listRefs({ fs, cache, dir, filepath: 'root/repo/refs' })).map(x => 'refs/' + x) : []),
+                ...(pathExists(`${dir}/.git/HEAD`) ? ['HEAD'] : []), // Ideally we should catch error later to avoid race, but I can't seem to catch error.
+                ...(pathExists(`${dir}/.git/refs`) ? (await git.listRefs({ fs, cache, dir, filepath: 'refs' })).map(x => 'refs/' + x) : []),
             ]
                 .map(async ref => ({
                     ref,
@@ -228,7 +228,7 @@ if(METHOD === '9p')
                         type: objectById.get(oid)?.type ?? null,
                     }))(await git.resolveRef({ fs, dir, ref, depth: 1 })),
                 })));
-            const indexEntries = pathExists('.git/index') ? await git.listFiles({ fs, cache, dir, fullEntry: true }) : [];
+            const indexEntries = pathExists(`${dir}/.git/index`) ? await git.listFiles({ fs, cache, dir, fullEntry: true }) : [];
 
             const oidSet = new Set(objectById.keys());
             const refSet = new Set(refs.map(ref => `${ref.ref}==>${ref.target}`));
