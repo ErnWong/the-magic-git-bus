@@ -76,14 +76,16 @@
       installPhase = ''
         runHook preInstall
         mkdir -p "$out"
-        cp -ar . "$out"
+        # cp -ar . "$out"
+        cp -Lr . "$out"
         runHook postInstall
       '';
-      postFixup = ''
+      fixupPhase = ''
         wrapProgram "$out/bin/the-magic-git-bus" \
           --set PATH ${pkgs.lib.makeBinPath [
             pkgs.static-web-server
             pkgs.uutils-coreutils-noprefix # for dirname
           ]}
+        # Don't patch anything else - our rootfs contains x86 files that shouldn't be modified.
       '';
     }
