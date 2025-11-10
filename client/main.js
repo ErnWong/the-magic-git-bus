@@ -30,41 +30,49 @@ Promise.allSettled([fontLoaded, emulatorStarted]).then(() => {
 const states = [
     {
         name: '1-git-init',
+        text: 'init',
         downloading: true,
         postLoadCommand: 'clear\n',
     },
     {
         name: '2-git-blobs',
+        text: 'blob',
         downloading: true,
         postLoadCommand: 'clear\n',
     },
     {
         name: '3-git-trees',
+        text: 'tree',
         downloading: true,
         postLoadCommand: 'clear\n',
     },
     {
         name: '4-git-commits',
+        text: 'commit',
         downloading: true,
         postLoadCommand: 'clear\n',
     },
     {
         name: '5-git-index',
+        text: 'index',
         downloading: true,
         postLoadCommand: 'clear\n',
     },
     {
         name: '6-git-tags',
+        text: 'tag',
         downloading: true,
         postLoadCommand: 'clear\n',
     },
     {
         name: '7-git-branches',
+        text: 'branch',
         downloading: true,
         postLoadCommand: 'clear\n',
     },
     {
         name: '8-git-annotated-tags',
+        text: 'annotated tag',
         downloading: true,
         postLoadCommand: 'clear\n',
     },
@@ -72,8 +80,13 @@ const states = [
 let restoring_state = false;
 for(const state of states)
 {
-    const button = document.createElement('button');
-    button.textContent = state.name;
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'state-selection';
+    radio.id = `state-selection-radio-${state.name}`;
+    const button = document.createElement('label');
+    button.setAttribute('for', radio.id);
+    button.textContent = state.text;
     let started = emulator.cpu_is_running;
     function update()
     {
@@ -97,7 +110,8 @@ for(const state of states)
         state.downloading = false;
         update();
     })();
-    document.getElementById("vm").parentElement.appendChild(button);
+    document.getElementById("vm-button-tray").appendChild(radio);
+    document.getElementById("vm-button-tray").appendChild(button);
 }
 
 if(METHOD === 'inotify')

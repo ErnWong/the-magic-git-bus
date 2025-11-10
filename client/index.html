@@ -20,436 +20,439 @@
         <link href="https://cdn.jsdelivr.net/gh/tabatkins/railroad-diagrams@ea9a12393bbaa2c802b0449fd5bdf34b6868b83c/railroad.css" rel="stylesheet" />
     </head>
     <body>
-        <nav>
-
-        </nav>
-        <main>
-            <section>
-                <h1>Data Structure</h1>
+        <h1 class="title">The Magic Git Bus</h1>
+        <div id="graph">
+        </div>
+        <div class="upper">
+            <main>
                 <section>
-                    <h1>Objects</h1>
+                    <h1>Data Structure</h1>
                     <section>
-                        <h1>Blob</h1>
-                        <p>Objects that store file contents.</p>
-                        <ol>
-                            <li>
-                                <h1>List all objects</h1>
-                                <p>We haven't added any yet, so we should see none.</p>
-                                <pre><code class="language-bash">
-                                    git cat-file --batch-check --batch-all-objects
-                                    ls .git/objects
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Create a file</h1>
-                                <pre><code class="language-bash">
-                                    echo hello world > myfile.txt
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Calculate its hash</h1>
-                                <pre><code class="language-bash">
-                                    git hash-object -t blob myfile.txt
-                                    # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad
-                                </code></pre>
-                                <p>Note it's not the direct sha1 sum of the file.</p>
-                                <pre><code class="language-bash">
-                                    cat myfile.txt | shasum
-                                    # 22596363b3de40b06f981fb85d82312e8c0ed511  -
-                                </code></pre>
-                                <p>Let's see why...</p>
-                            </li>
-                            <li>
-                                <h1>Add metadata to blob</h1>
-                                <pre><code class="language-bash">
-                                    echo -e "blob 12\0hello world" > myblob
-                                </code></pre>
-                                <h2>Blob Anatomy</h2>
-                                <pre class="railroad-src">
-                                    Diagram(
-                                        Sequence(
-                                            Terminal("blob"),
-                                            Terminal("space"),
-                                            NonTerminal("number of bytes"),
-                                            Terminal("null"),
-                                            NonTerminal("file contents"),
-                                        )
-                                    )
-                                </pre>
-                            </li>
-                            <li>
-                                <h1>Compress blob.</h1>
-                                <pre><code class="language-bash">
-                                    pigz --keep --zlib myblob
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Hash the compressed blob</h1>
-                                <pre><code class="language-bash">
-                                    cat myblob.zz | shasum
-                                    # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad  -
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Chuck it into the database</h1>
-                                <pre><code class="language-bash">
-                                    mkdir .git/objects/3b
-                                    mv myblob.zz .git/objects/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Enjoy your new domesticated blob</h1>
-                                <pre><code class="language-bash">
-                                    git cat-file --batch-check --batch-all-objects
-                                    # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad blob 12
-
-                                    git cat-file -p 3b18e512dba79e4c8300dd08aeb37f8e728b8dad
-                                    # hello world
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Shortcut Unlocked! Create a blob using <code class="language-bash">git hash-object -w</code></h1>
-                                <pre><code class="language-bash">
-                                    echo foobar > otherfile.txt
-                                    git hash-object -t blob -w otherfile.txt
-                                    # 323fae03f4606ea9991df8befbb2fca795e648fa
-
-                                    find .git/objects -type f
-                                </code></pre>
-                            </li>
-                        </ol>
-                    </section>
-                    <section>
-                        <h1>Tree</h1>
-                        <p>Objects that describes folders.</p>
-                        <ol>
-                            <li>
-                                <h1>Tree Anatomy</h2>
-                                <pre class="railroad-src">
-                                    Diagram(
-                                        OneOrMore(
+                        <h1>Objects</h1>
+                        <section>
+                            <h1>Blob</h1>
+                            <p>Objects that store file contents.</p>
+                            <ol>
+                                <li>
+                                    <h1>List all objects</h1>
+                                    <p>We haven't added any yet, so we should see none.</p>
+                                    <pre><code class="language-bash">
+                                        git cat-file --batch-check --batch-all-objects
+                                        ls .git/objects
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Create a file</h1>
+                                    <pre><code class="language-bash">
+                                        echo hello world > myfile.txt
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Calculate its hash</h1>
+                                    <pre><code class="language-bash">
+                                        git hash-object -t blob myfile.txt
+                                        # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad
+                                    </code></pre>
+                                    <p>Note it's not the direct sha1 sum of the file.</p>
+                                    <pre><code class="language-bash">
+                                        cat myfile.txt | shasum
+                                        # 22596363b3de40b06f981fb85d82312e8c0ed511  -
+                                    </code></pre>
+                                    <p>Let's see why...</p>
+                                </li>
+                                <li>
+                                    <h1>Add metadata to blob</h1>
+                                    <pre><code class="language-bash">
+                                        echo -e "blob 12\0hello world" > myblob
+                                    </code></pre>
+                                    <h2>Blob Anatomy</h2>
+                                    <pre class="railroad-src">
+                                        Diagram(
                                             Sequence(
-                                                NonTerminal("file mode"),
-                                                NonTerminal("filename"),
-                                                Terminal("null"),
-                                                NonTerminal("blob hash (20 bytes of sha1)"),
-                                            ),
-                                        )
-                                    )
-                                </pre>
-                            </li>
-                            <li>
-                                <h1>Create leaf tree with single file</h1>
-                                <pre><code class="language-bash">
-                                    echo -e -n "100644 copy.txt\0" > childtree
-                                    echo 3b18e512dba79e4c8300dd08aeb37f8e728b8dad | xxd -r -p >> childtree
-                                    git hash-object -t tree -w childtree
-                                    # 8209f53524b4818a6d18424613de08c1c6552f11
-                                </code></pre>
-                            </li>
-                            <li id="tree-create">
-                                <h1>Create parent tree with folders and files</h1>
-                                <pre><code class="language-bash">
-                                    echo -e -n "40000 folder\0" > mytree
-                                    echo 8209f53524b4818a6d18424613de08c1c6552f11 | xxd -r -p >> mytree
-                                    echo -e -n "100644 myfile.txt\0" >> mytree
-                                    echo 3b18e512dba79e4c8300dd08aeb37f8e728b8dad | xxd -r -p >> mytree
-                                    echo -e -n "100644 otherfile.txt\0" >> mytree
-                                    echo 323fae03f4606ea9991df8befbb2fca795e648fa | xxd -r -p >> mytree
-                                    git hash-object -t tree -w mytree
-                                    # 6db497f8ca5a8bf50591fd13beb12fc66dff1d31
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Inspect your newly domesticated tree</h1>
-                                <pre><code class="language-bash">
-                                    git ls-tree 6db497f8ca5a8bf50591fd13beb12fc66dff1d31
-                                    # 040000 tree 8209f53524b4818a6d18424613de08c1c6552f11    folder
-                                    # 100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad    myfile.txt
-                                    # 100644 blob 323fae03f4606ea9991df8befbb2fca795e648fa    otherfile.txt
-
-                                    git ls-tree -r 6db497f8ca5a8bf50591fd13beb12fc66dff1d31
-                                    # 100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad    folder/copy.txt
-                                    # 100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad    myfile.txt
-                                    # 100644 blob 323fae03f4606ea9991df8befbb2fca795e648fa    otherfile.txt
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Shortcut Unlocked! Create a tree using <code class="language-bash">git mktree</code></h1>
-                                <p>We'll use <code class="language-bash">git mktree</code> in the following sections.</p>
-                            </li>
-                        </ol>
-                    </section>
-                    <section>
-                        <h1>Commit</h1>
-                        <p>Objects that describe a snapshot of the entire codebase.</p>
-                        <ol>
-                            <li>
-                                <h1>Anatomy of a commit</h1>
-                                <pre class="railroad-src">
-                                    Diagram(
-                                        Stack(
-                                            Sequence(
-                                                NonTerminal("tree-info"),
-                                                Terminal("\\n"),
-                                            ),
-                                            Sequence(
-                                                NonTerminal("author-info"),
-                                                Terminal("\\n"),
-                                            ),
-                                            Sequence(
-                                                NonTerminal("committer-info"),
-                                                Terminal("\\n"),
-                                            ),
-                                            NonTerminal("zero-or-more-parents"),
-                                            Terminal("\\n"),
-                                            NonTerminal("message"),
-                                        )
-                                    )
-                                </pre>
-                                <h2>tree-info</h2>
-                                <pre class="railroad-src">
-                                    Diagram(
-                                        Sequence(
-                                            Terminal("tree"),
-                                            Terminal("space"),
-                                            NonTerminal("tree sha1 in hex"),
-                                        ),
-                                    )
-                                </pre>
-                                <h2>author-info</h2>
-                                <pre class="railroad-src">
-                                    Diagram(
-                                        Sequence(
-                                            Terminal("author "),
-                                            Terminal("space"),
-                                            NonTerminal("name"),
-                                            Terminal("space"),
-                                            Terminal("&lt;"),
-                                            NonTerminal("email"),
-                                            Terminal("&gt;"),
-                                            Terminal("space"),
-                                            NonTerminal("sec since epoch"),
-                                            Terminal("space"),
-                                            NonTerminal("timezone"),
-                                        ),
-                                    )
-                                </pre>
-                                <h2>committer-info</h2>
-                                <pre class="railroad-src">
-                                    Diagram(
-                                        Sequence(
-                                            Terminal("committer "),
-                                            Terminal("space"),
-                                            NonTerminal("name"),
-                                            Terminal("space"),
-                                            Terminal("&lt;"),
-                                            NonTerminal("email"),
-                                            Terminal("&gt;"),
-                                            Terminal("space"),
-                                            NonTerminal("sec since epoch"),
-                                            Terminal("space"),
-                                            NonTerminal("timezone"),
-                                        ),
-                                    )
-                                </pre>
-                                <h2>zero-or-more-parents</h2>
-                                <pre class="railroad-src">
-                                    Diagram(
-                                        ZeroOrMore(
-                                            Sequence(
-                                                Terminal("parent"),
+                                                Terminal("blob"),
                                                 Terminal("space"),
-                                                NonTerminal("parent sha1 in hex"),
-                                                Terminal("\\n"),
+                                                NonTerminal("number of bytes"),
+                                                Terminal("null"),
+                                                NonTerminal("file contents"),
                                             )
-                                        ),
-                                    )
-                                </pre>
-                            </li>
-                            <li>
-                                <h1>Create commit.</h1>
-                                <p>Using our <a href="#tree-create">previous tree object</a></p>
-                                <pre><code class="language-bash">
-                                    echo tree 6db497f8ca5a8bf50591fd13beb12fc66dff1d31 > mycommit.txt
-                                    echo "author Waylon Smithers &lt;mr@smithers.invalid&gt; 1762902000 +1300" >> mycommit.txt
-                                    echo "committer Charles Montgomery Plantagenet Schicklgruber Burns &lt;mr@burns.invalid&gt; 1762902000 +1300" >> mycommit.txt
-                                    echo "" >> mycommit.txt
-                                    echo "My first commit" >> mycommit.txt
-                                    git hash-object -t commit -w mycommit.txt
-                                    # 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b
+                                        )
+                                    </pre>
+                                </li>
+                                <li>
+                                    <h1>Compress blob.</h1>
+                                    <pre><code class="language-bash">
+                                        pigz --keep --zlib myblob
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Hash the compressed blob</h1>
+                                    <pre><code class="language-bash">
+                                        cat myblob.zz | shasum
+                                        # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad  -
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Chuck it into the database</h1>
+                                    <pre><code class="language-bash">
+                                        mkdir .git/objects/3b
+                                        mv myblob.zz .git/objects/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Enjoy your new domesticated blob</h1>
+                                    <pre><code class="language-bash">
+                                        git cat-file --batch-check --batch-all-objects
+                                        # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad blob 12
 
-                                    git show 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Shortcut Unlocked! <code class="language-bash">git commit-tree</code></h1>
-                                <p>Let's see it in action next...</p>
-                            </li>
-                            <li>
-                                <h1>Modify <code class="language-bash">folder/copy.txt</code> and commit</h1>
-                                <pre><code class="language-bash">
-                                    echo modified | git hash-object -w --stdin
-                                    # 2e0996000b7e9019eabcad29391bf0f5c7702f0b
+                                        git cat-file -p 3b18e512dba79e4c8300dd08aeb37f8e728b8dad
+                                        # hello world
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Shortcut Unlocked! Create a blob using <code class="language-bash">git hash-object -w</code></h1>
+                                    <pre><code class="language-bash">
+                                        echo foobar > otherfile.txt
+                                        git hash-object -t blob -w otherfile.txt
+                                        # 323fae03f4606ea9991df8befbb2fca795e648fa
 
-                                    echo -e "100644 blob 2e0996000b7e9019eabcad29391bf0f5c7702f0b\tcopy.txt" | git mktree
-                                    # 974cd135eb6c4da9d3f14e1de564f76a8a07234e
+                                        find .git/objects -type f
+                                    </code></pre>
+                                </li>
+                            </ol>
+                        </section>
+                        <section>
+                            <h1>Tree</h1>
+                            <p>Objects that describes folders.</p>
+                            <ol>
+                                <li>
+                                    <h1>Tree Anatomy</h2>
+                                    <pre class="railroad-src">
+                                        Diagram(
+                                            OneOrMore(
+                                                Sequence(
+                                                    NonTerminal("file mode"),
+                                                    NonTerminal("filename"),
+                                                    Terminal("null"),
+                                                    NonTerminal("blob hash (20 bytes of sha1)"),
+                                                ),
+                                            )
+                                        )
+                                    </pre>
+                                </li>
+                                <li>
+                                    <h1>Create leaf tree with single file</h1>
+                                    <pre><code class="language-bash">
+                                        echo -e -n "100644 copy.txt\0" > childtree
+                                        echo 3b18e512dba79e4c8300dd08aeb37f8e728b8dad | xxd -r -p >> childtree
+                                        git hash-object -t tree -w childtree
+                                        # 8209f53524b4818a6d18424613de08c1c6552f11
+                                    </code></pre>
+                                </li>
+                                <li id="tree-create">
+                                    <h1>Create parent tree with folders and files</h1>
+                                    <pre><code class="language-bash">
+                                        echo -e -n "40000 folder\0" > mytree
+                                        echo 8209f53524b4818a6d18424613de08c1c6552f11 | xxd -r -p >> mytree
+                                        echo -e -n "100644 myfile.txt\0" >> mytree
+                                        echo 3b18e512dba79e4c8300dd08aeb37f8e728b8dad | xxd -r -p >> mytree
+                                        echo -e -n "100644 otherfile.txt\0" >> mytree
+                                        echo 323fae03f4606ea9991df8befbb2fca795e648fa | xxd -r -p >> mytree
+                                        git hash-object -t tree -w mytree
+                                        # 6db497f8ca5a8bf50591fd13beb12fc66dff1d31
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Inspect your newly domesticated tree</h1>
+                                    <pre><code class="language-bash">
+                                        git ls-tree 6db497f8ca5a8bf50591fd13beb12fc66dff1d31
+                                        # 040000 tree 8209f53524b4818a6d18424613de08c1c6552f11    folder
+                                        # 100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad    myfile.txt
+                                        # 100644 blob 323fae03f4606ea9991df8befbb2fca795e648fa    otherfile.txt
 
-                                    echo -e "040000 tree 974cd135eb6c4da9d3f14e1de564f76a8a07234e\tfolder
-                                    100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad\tmyfile.txt
-                                    100644 blob 323fae03f4606ea9991df8befbb2fca795e648fa\totherfile.txt" | git mktree
-                                    # 486a17fba0168a9242e39931c2b0233ada6a9671
+                                        git ls-tree -r 6db497f8ca5a8bf50591fd13beb12fc66dff1d31
+                                        # 100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad    folder/copy.txt
+                                        # 100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad    myfile.txt
+                                        # 100644 blob 323fae03f4606ea9991df8befbb2fca795e648fa    otherfile.txt
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Shortcut Unlocked! Create a tree using <code class="language-bash">git mktree</code></h1>
+                                    <p>We'll use <code class="language-bash">git mktree</code> in the following sections.</p>
+                                </li>
+                            </ol>
+                        </section>
+                        <section>
+                            <h1>Commit</h1>
+                            <p>Objects that describe a snapshot of the entire codebase.</p>
+                            <ol>
+                                <li>
+                                    <h1>Anatomy of a commit</h1>
+                                    <pre class="railroad-src">
+                                        Diagram(
+                                            Stack(
+                                                Sequence(
+                                                    NonTerminal("tree-info"),
+                                                    Terminal("\\n"),
+                                                ),
+                                                Sequence(
+                                                    NonTerminal("author-info"),
+                                                    Terminal("\\n"),
+                                                ),
+                                                Sequence(
+                                                    NonTerminal("committer-info"),
+                                                    Terminal("\\n"),
+                                                ),
+                                                NonTerminal("zero-or-more-parents"),
+                                                Terminal("\\n"),
+                                                NonTerminal("message"),
+                                            )
+                                        )
+                                    </pre>
+                                    <h2>tree-info</h2>
+                                    <pre class="railroad-src">
+                                        Diagram(
+                                            Sequence(
+                                                Terminal("tree"),
+                                                Terminal("space"),
+                                                NonTerminal("tree sha1 in hex"),
+                                            ),
+                                        )
+                                    </pre>
+                                    <h2>author-info</h2>
+                                    <pre class="railroad-src">
+                                        Diagram(
+                                            Sequence(
+                                                Terminal("author "),
+                                                Terminal("space"),
+                                                NonTerminal("name"),
+                                                Terminal("space"),
+                                                Terminal("&lt;"),
+                                                NonTerminal("email"),
+                                                Terminal("&gt;"),
+                                                Terminal("space"),
+                                                NonTerminal("sec since epoch"),
+                                                Terminal("space"),
+                                                NonTerminal("timezone"),
+                                            ),
+                                        )
+                                    </pre>
+                                    <h2>committer-info</h2>
+                                    <pre class="railroad-src">
+                                        Diagram(
+                                            Sequence(
+                                                Terminal("committer "),
+                                                Terminal("space"),
+                                                NonTerminal("name"),
+                                                Terminal("space"),
+                                                Terminal("&lt;"),
+                                                NonTerminal("email"),
+                                                Terminal("&gt;"),
+                                                Terminal("space"),
+                                                NonTerminal("sec since epoch"),
+                                                Terminal("space"),
+                                                NonTerminal("timezone"),
+                                            ),
+                                        )
+                                    </pre>
+                                    <h2>zero-or-more-parents</h2>
+                                    <pre class="railroad-src">
+                                        Diagram(
+                                            ZeroOrMore(
+                                                Sequence(
+                                                    Terminal("parent"),
+                                                    Terminal("space"),
+                                                    NonTerminal("parent sha1 in hex"),
+                                                    Terminal("\\n"),
+                                                )
+                                            ),
+                                        )
+                                    </pre>
+                                </li>
+                                <li>
+                                    <h1>Create commit.</h1>
+                                    <p>Using our <a href="#tree-create">previous tree object</a></p>
+                                    <pre><code class="language-bash">
+                                        echo tree 6db497f8ca5a8bf50591fd13beb12fc66dff1d31 > mycommit.txt
+                                        echo "author Waylon Smithers &lt;mr@smithers.invalid&gt; 1762902000 +1300" >> mycommit.txt
+                                        echo "committer Charles Montgomery Plantagenet Schicklgruber Burns &lt;mr@burns.invalid&gt; 1762902000 +1300" >> mycommit.txt
+                                        echo "" >> mycommit.txt
+                                        echo "My first commit" >> mycommit.txt
+                                        git hash-object -t commit -w mycommit.txt
+                                        # 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b
 
-                                    GIT_AUTHOR_DATE="2025-11-12T12:00:00+13" GIT_COMMITTER_DATE="2025-11-12T12:00:00+13" git commit-tree -p 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b -m "Second commit!" 486a17fba0168a9242e39931c2b0233ada6a9671
-                                    # 704cad9af4578d8f3248fe4c4e044014322f1154
+                                        git show 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Shortcut Unlocked! <code class="language-bash">git commit-tree</code></h1>
+                                    <p>Let's see it in action next...</p>
+                                </li>
+                                <li>
+                                    <h1>Modify <code class="language-bash">folder/copy.txt</code> and commit</h1>
+                                    <pre><code class="language-bash">
+                                        echo modified | git hash-object -w --stdin
+                                        # 2e0996000b7e9019eabcad29391bf0f5c7702f0b
 
-                                    git log 704cad9af4578d8f3248fe4c4e044014322f1154
+                                        echo -e "100644 blob 2e0996000b7e9019eabcad29391bf0f5c7702f0b\tcopy.txt" | git mktree
+                                        # 974cd135eb6c4da9d3f14e1de564f76a8a07234e
 
-                                    git show 704cad9af4578d8f3248fe4c4e044014322f1154
-                                </code></pre>
-                            </li>
-                        </ol>
+                                        echo -e "040000 tree 974cd135eb6c4da9d3f14e1de564f76a8a07234e\tfolder
+                                        100644 blob 3b18e512dba79e4c8300dd08aeb37f8e728b8dad\tmyfile.txt
+                                        100644 blob 323fae03f4606ea9991df8befbb2fca795e648fa\totherfile.txt" | git mktree
+                                        # 486a17fba0168a9242e39931c2b0233ada6a9671
+
+                                        GIT_AUTHOR_DATE="2025-11-12T12:00:00+13" GIT_COMMITTER_DATE="2025-11-12T12:00:00+13" git commit-tree -p 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b -m "Second commit!" 486a17fba0168a9242e39931c2b0233ada6a9671
+                                        # 704cad9af4578d8f3248fe4c4e044014322f1154
+
+                                        git log 704cad9af4578d8f3248fe4c4e044014322f1154
+
+                                        git show 704cad9af4578d8f3248fe4c4e044014322f1154
+                                    </code></pre>
+                                </li>
+                            </ol>
+                        </section>
                     </section>
-                </section>
-                <section>
-                    <h1>Index</h1>
-                    <p>The bridge between objects and the working directory.</p>
-                    <ol>
-                        <li>
-                            <h1>Meet your index</h1>
-                            <p>We won't be writing it manually. It's a slightly hairy <a href="https://git-scm.com/docs/index-format">binary file</a>.</p>
-                            <pre><code class="language-bash">
-                                ls -la .git/index
-                            </code></pre>
-                        </li>
-                        <li>
-                            <h1>Add an entry to index</h1>
-                            <p>Similar to what happens when you run <code class="language-bash">git add</code>.</p>
-                            <pre><code class="language-bash">
-                                git update-index --add --cacheinfo 100644,2e0996000b7e9019eabcad29391bf0f5c7702f0b,my/path/to/file.txt
-                            </code></pre>
-                        </li>
-                        <li>
-                            <h1>Generate a tree out of the index</h1>
-                            <p>Similar to what happens when you run <code class="language-bash">git commit</code>.</p>
-                            <pre><code class="language-bash">
-                                git write-tree
-                                # cfcb4ca1dbe0dbcfd99df397d57d2d6fe3853745
-
-                                git ls-tree -r cfcb4ca1dbe0dbcfd99df397d57d2d6fe3853745
-                            </code></pre>
-                        </li>
-                        <li>
-                            <h1>Read existing tree into index</h1>
-                            <p>Similar to what happens when you run <code class="language-bash">git reset</code>.</p>
-                            <pre><code class="language-bash">
-                                git read-tree 486a17f
-                                git status
-                                git read-tree cfcb4ca
-                                git status
-                            </code></pre>
-                        </li>
-                    </ol>
-                </section>
-                <section>
-                    <h1>Refs</h1>
-                    <p>Naming objects so we don't need to remember long hashes.</p>
                     <section>
-                        <h1>Tags (Lightweight)</h1>
-                        <p>The introverted ref that doesn't move on it's own.</p>
+                        <h1>Index</h1>
+                        <p>The bridge between objects and the working directory.</p>
                         <ol>
                             <li>
-                                <h1>Create a tag</h1>
-                                <p>Save an object id into the refs folder.</p>
+                                <h1>Meet your index</h1>
+                                <p>We won't be writing it manually. It's a slightly hairy <a href="https://git-scm.com/docs/index-format">binary file</a>.</p>
                                 <pre><code class="language-bash">
-                                    echo 704cad9af4578d8f3248fe4c4e044014322f1154 > .git/refs/tags/mytag
+                                    ls -la .git/index
                                 </code></pre>
                             </li>
                             <li>
-                                <h1>Say hello to your new tag</h1>
+                                <h1>Add an entry to index</h1>
+                                <p>Similar to what happens when you run <code class="language-bash">git add</code>.</p>
                                 <pre><code class="language-bash">
-                                    git show mytag
+                                    git update-index --add --cacheinfo 100644,2e0996000b7e9019eabcad29391bf0f5c7702f0b,my/path/to/file.txt
                                 </code></pre>
                             </li>
                             <li>
-                                <h1>Shortcut Unlocked! <code class="language-bash">git update-ref</code></h1>
+                                <h1>Generate a tree out of the index</h1>
+                                <p>Similar to what happens when you run <code class="language-bash">git commit</code>.</p>
                                 <pre><code class="language-bash">
-                                    git update-ref refs/tags/mytag 704cad9
+                                    git write-tree
+                                    # cfcb4ca1dbe0dbcfd99df397d57d2d6fe3853745
+
+                                    git ls-tree -r cfcb4ca1dbe0dbcfd99df397d57d2d6fe3853745
                                 </code></pre>
                             </li>
                             <li>
-                                <h1>Old Friend Reunited: <code class="language-bash">git tag</code></h1>
+                                <h1>Read existing tree into index</h1>
+                                <p>Similar to what happens when you run <code class="language-bash">git reset</code>.</p>
                                 <pre><code class="language-bash">
-                                    git tag another-tag 704cad9
+                                    git read-tree 486a17f
+                                    git status
+                                    git read-tree cfcb4ca
+                                    git status
                                 </code></pre>
                             </li>
                         </ol>
                     </section>
                     <section>
-                        <h1>Heads (aka Branches)</h1>
-                        <p>The extroverted ref that moves with us.</p>
-                        <ol>
-                            <li>
-                                <h1>Create a branch</h1>
-                                <p>So we can keep track of what we're working on.</p>
-                                <pre><code class="language-bash">
-                                    echo 704cad9af4578d8f3248fe4c4e044014322f1154 > .git/refs/heads/master
-                                    git show master
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Create another branch</h1>
-                                <p>For when you need to work on multiple places at the same time. But how do we keep track of which branch we're on?</p>
-                                <pre><code class="language-bash">
-                                    echo 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b > .git/refs/heads/story
-                                    git show story
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Write the <code class="language-bash">.git/HEAD</code> symolic ref</h1>
-                                <p>Now we know what branch we're on.</p>
-                                <pre><code class="language-bash">
-                                    echo ref: refs/heads/story > .git/HEAD
-                                    git show
-                                </code></pre>
-                            </li>
-                            <li>
-                                <h1>Commit, and watch it move</h1>
-                                <p>Branches follow us to the new commit we make.</p>
-                                <pre><code class="language-bash">
-                                    echo ref: refs/heads/master > .git/HEAD
-                                    cat .git/refs/heads/master
-                                    # 704cad9af4578d8f3248fe4c4e044014322f1154
-                                    echo new-content > newfile.txt
-                                    git add newfile.txt
-                                    git commit -m "Third commit"
-                                    cat .git/refs/heads/master
-                                    # a8df5619fbd04c68508c5bf887147a3a4116d3e3
-                                </code></pre>
-                            </li>
-                        </ol>
-                        <p>Side note: <code class="language-bash">git update-ref</code> and <code class="language-bash">git symbolic-ref</code> also write to the reflogs: <code class="language-bash">.git/logs/HEAD</code> and <code class="language-bash">.git/logs/refs/*</code>, so we can retrace our steps whenever we get lost.</p>
-                    </section>
-                    <section>
-                        <h1>Annotated Tags</h1>
-                        <ol>
-                            <li>
-                                <h1>Create an annotated tag</h1>
-                                <pre><code class="language-bash">
-                                    git tag -a -m "This is an important commit" my-important-tag 704cad9af
-                                </code></pre>
-                            </li>
-                        </ol>
+                        <h1>Refs</h1>
+                        <p>Naming objects so we don't need to remember long hashes.</p>
+                        <section>
+                            <h1>Tags (Lightweight)</h1>
+                            <p>The introverted ref that doesn't move on it's own.</p>
+                            <ol>
+                                <li>
+                                    <h1>Create a tag</h1>
+                                    <p>Save an object id into the refs folder.</p>
+                                    <pre><code class="language-bash">
+                                        echo 704cad9af4578d8f3248fe4c4e044014322f1154 > .git/refs/tags/mytag
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Say hello to your new tag</h1>
+                                    <pre><code class="language-bash">
+                                        git show mytag
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Shortcut Unlocked! <code class="language-bash">git update-ref</code></h1>
+                                    <pre><code class="language-bash">
+                                        git update-ref refs/tags/mytag 704cad9
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Old Friend Reunited: <code class="language-bash">git tag</code></h1>
+                                    <pre><code class="language-bash">
+                                        git tag another-tag 704cad9
+                                    </code></pre>
+                                </li>
+                            </ol>
+                        </section>
+                        <section>
+                            <h1>Heads (aka Branches)</h1>
+                            <p>The extroverted ref that moves with us.</p>
+                            <ol>
+                                <li>
+                                    <h1>Create a branch</h1>
+                                    <p>So we can keep track of what we're working on.</p>
+                                    <pre><code class="language-bash">
+                                        echo 704cad9af4578d8f3248fe4c4e044014322f1154 > .git/refs/heads/master
+                                        git show master
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Create another branch</h1>
+                                    <p>For when you need to work on multiple places at the same time. But how do we keep track of which branch we're on?</p>
+                                    <pre><code class="language-bash">
+                                        echo 02cbc162b0a74f3cbb90c6c7bcf7387b3033015b > .git/refs/heads/story
+                                        git show story
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Write the <code class="language-bash">.git/HEAD</code> symolic ref</h1>
+                                    <p>Now we know what branch we're on.</p>
+                                    <pre><code class="language-bash">
+                                        echo ref: refs/heads/story > .git/HEAD
+                                        git show
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Commit, and watch it move</h1>
+                                    <p>Branches follow us to the new commit we make.</p>
+                                    <pre><code class="language-bash">
+                                        echo ref: refs/heads/master > .git/HEAD
+                                        cat .git/refs/heads/master
+                                        # 704cad9af4578d8f3248fe4c4e044014322f1154
+                                        echo new-content > newfile.txt
+                                        git add newfile.txt
+                                        git commit -m "Third commit"
+                                        cat .git/refs/heads/master
+                                        # a8df5619fbd04c68508c5bf887147a3a4116d3e3
+                                    </code></pre>
+                                </li>
+                            </ol>
+                            <p>Side note: <code class="language-bash">git update-ref</code> and <code class="language-bash">git symbolic-ref</code> also write to the reflogs: <code class="language-bash">.git/logs/HEAD</code> and <code class="language-bash">.git/logs/refs/*</code>, so we can retrace our steps whenever we get lost.</p>
+                        </section>
+                        <section>
+                            <h1>Annotated Tags</h1>
+                            <ol>
+                                <li>
+                                    <h1>Create an annotated tag</h1>
+                                    <pre><code class="language-bash">
+                                        git tag -a -m "This is an important commit" my-important-tag 704cad9af
+                                    </code></pre>
+                                </li>
+                            </ol>
+                        </section>
                     </section>
                 </section>
-            </section>
-        </main>
-        <aside>
-            <div id="vm">
-            </div> 
-            <div id="graph">
+            </main>
+            <div id="vm-area">
+                <div id="vm">
+                </div> 
+                <div id="vm-button-tray">
+                    <h3>Time Machine</h3>
+                </div>
             </div>
-        </aside>
+        </div>
         <script type="module" src="/main.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/prismjs@v1.30.0/components/prism-core.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/prismjs@v1.30.0/plugins/autoloader/prism-autoloader.min.js"></script>

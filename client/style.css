@@ -1,13 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Meow+Script&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Rubik+Dirt&display=swap');
+
+@font-face {                  
+font-family: '0xProto';
+/* TODO don't hotlink */
+src: url(https://humantooth.neocities.org/fonts/0xProto-Regular.woff2) format('woff2');
+font-weight: normal;
+font-style: normal;
+}
+
+html, body{
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    flex-grow: 0;
+    font-family: "Meow Script", cursive;
+    text-align: center;
+}
+
+.upper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+    flex-basis: 50%;
+    min-height: 0;
+}
+
+#graph {
+    flex-grow: 1;
+    flex-basis: 50%;
+    height: 50%;
+    overflow: scroll;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: blue;
+}
+
+main {
+    width: 50%;
+    overflow: scroll;
+}
+
+#vm-area {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
 #vm {
     display: inline-block;
     border-radius: 4px;
     background-color: black;
+    padding: 1.5em;
+
+    /* Hardcode size so it gets the right size before it has any content */
+    min-width: 688px;
+    min-height: 432px;
+}
+
+#vm-button-tray {
+    display: flex;
+}
+
+#vm-button-tray input {
+    width: 0;
+}
+#vm-button-tray label {
+    flex-basis: 100%;
+    text-transform: uppercase;
+    margin-top: 0;
+    margin-bottom: 4px;
+}
+#vm-button-tray input + label:hover,
+#vm-button-tray input:focus + label {
+}
+#vm-button-tray input:checked + label,
+#vm-button-tray input + label:active {
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+#vm-button-tray input:checked + label:hover,
+#vm-button-tray input:checked + label:focus,
+#vm-button-tray input:active + label:hover,
+#vm-button-tray input:focus + label {
+
 }
 
 #vm .xterm-viewport {
     scrollbar-width: none;
 }
 
-svg * {
+#graph svg * {
     shape-rendering: crispEdges;
+}
+
+#vm, #graph {
+    position: relative;
+    filter: sepia(0.3);
+}
+
+#vm::after, #graph::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+}
+
+h1 {
+    font-family: "Rubik Dirt", sans-serif;
+    font-weight: normal;
+}
+
+html {
+    font-family: "Old Standard TT", serif;
+    font-family: "Instrument Serif", serif;
+}
+
+main code[class*="language-"], main pre[class*="language-"], code, pre {
+    font-family: "0xproto", monospace;
+    font-size: 0.7em;
+}
+
+.railroad-generated {
+    display: none;
 }
