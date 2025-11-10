@@ -69,6 +69,10 @@
             networking.useDHCP = false;
             networking.interfaces = {};
 
+            # Disable annoying messages when something breaks
+            # We don't care in this case.
+            systemd.coredump.enable = false;
+
             # This is used to pull in stdenv to speed up the installation, so removing it
             # means you have to download it
             system.extraDependencies = lib.mkForce [];
