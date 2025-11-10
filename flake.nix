@@ -40,7 +40,17 @@
       in
       {
         packages = {
-          inherit vmImage vmFs vmStates server;
+          vm-image-tar = vmImage.tar;
+          vm-image-kernel = vmImage.kernel;
+          vm-image-initrd = vmImage.initrd;
+
+          vm-rootfs = vmFs.rootfs;
+          vm-rootfs-json = vmFs.rootfsJson;
+
+          vm-states-logged-in = vmStates.loggedInState;
+          vm-states-git = vmStates.gitStates;
+
+          server = server;
         };
         defaultPackage = server;
       }
