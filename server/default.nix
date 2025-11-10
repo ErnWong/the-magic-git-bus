@@ -1,4 +1,4 @@
-{ system, pkgs, nixpkgs, v86, vmImage, vmStates, fsex300 }:
+{ system, pkgs, nixpkgs, v86, vmImage, vmFs, vmStates, fsex300 }:
   let
     libv86 = v86.packages.${system}.libv86;
     bios = v86.packages.${system}.seabios;
@@ -26,17 +26,13 @@
         runHook preBuild
         ln -s "${libv86}" v86
         ln -s "${bios}" bios
+        ln -s "${vmFs.rootfs}/fs" ./fs
+        ln -s "${vmFs.rootfsJson}/fs.json" ./fs.json
         mkdir -p images
-        zstd -19 --keep "${vmImage}/iso/nixos.iso" -o ./images/nixos.iso
-        zstd -19 --keep "${vmStates.loggedInState}/0-login.bin" -o ./images/0-login.bin.zst
-        zstd -19 --keep "${vmStates.gitStates}/1-git-init.bin" -o ./images/1-git-init.bin.zst
-        zstd -19 --keep "${vmStates.gitStates}/2-git-blobs.bin" -o ./images/2-git-blobs.bin.zst
-        zstd -19 --keep "${vmStates.gitStates}/3-git-trees.bin" -o ./images/3-git-trees.bin.zst
-        zstd -19 --keep "${vmStates.gitStates}/4-git-commits.bin" -o ./images/4-git-commits.bin.zst
-        zstd -19 --keep "${vmStates.gitStates}/5-git-index.bin" -o ./images/5-git-index.bin.zst
-        zstd -19 --keep "${vmStates.gitStates}/6-git-tags.bin" -o ./images/6-git-tags.bin.zst
-        zstd -19 --keep "${vmStates.gitStates}/7-git-branches.bin" -o ./images/7-git-branches.bin.zst
-        zstd -19 --keep "${vmStates.gitStates}/8-git-annotated-tags.bin" -o ./images/8-git-annotated-tags.bin.zst
+        ln -s "${vmImage.kernel}/bzImage" images/bzImage
+        ln -s "${vmImage.initrd}/initrd.zst" images/initrd.zst
+        ln -s "${vmStates.loggedInState}/"* ./images/
+        ln -s "${vmStates.gitStates}/"* ./images/
         ln -s "${pkgs.fetchurl { # TODO Use npm the nix way
           url = "https://cdn.jsdelivr.net/npm/xterm@5.2.1/lib/xterm.min.js";
           hash = "sha256-ZZr3ei46ADqAYwr6ktRTx/IVPVh8ti9goKoQttkdnzY=";

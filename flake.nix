@@ -35,7 +35,7 @@
           inherit system pkgs nixpkgs v86 vmFs vmImage;
         };
         server = import ./server/default.nix {
-          inherit system pkgs nixpkgs v86 vmImage vmStates fsex300;
+          inherit system pkgs nixpkgs v86 vmImage vmFs vmStates fsex300;
         };
       in
       {
