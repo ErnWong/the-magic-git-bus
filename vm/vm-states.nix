@@ -8,6 +8,7 @@
         name = "the-magic-git-bus-login-state";
         nativeBuildInputs = [
           pkgs.nodejs_24
+          pkgs.zstd
         ];
         src = nixpkgs.lib.fileset.toSource {
           root = ./..;
@@ -32,13 +33,14 @@
         '';
         installPhase = ''
           mkdir -p "$out"
-          cp images/0-login.bin "$out"
+          zstd -19 images/0-login.bin -o "$out/0-login.bin.zst"
         '';
       };
       gitStates = pkgs.stdenv.mkDerivation {
         name = "the-magic-git-bus-git-states";
         nativeBuildInputs = [
           pkgs.nodejs_24
+          pkgs.zstd
         ];
         src = nixpkgs.lib.fileset.toSource {
           root = ./..;
@@ -55,23 +57,23 @@
           ln -s "${libv86}" v86
           ln -s "${bios}" bios
           mkdir -p images
-          ln -s "${vmFs.rootfs}" ./fs
+          ln -s "${vmFs.rootfs}/fs" ./fs
           ln -s "${vmFs.rootfsJson}/fs.json" ./fs.json
-          ln -s ${loggedInState}/0-login.bin ./images
+          ln -s ${loggedInState}/0-login.bin.zst ./images
           ln -s "${vmImage.kernel}/bzImage" images/bzImage
           ln -s "${vmImage.initrd}/initrd.zst" images/initrd.zst
           ./vm/build-state-1-git.js
         '';
         installPhase = ''
           mkdir -p "$out"
-          cp images/1-git-init.bin "$out"
-          cp images/2-git-blobs.bin "$out"
-          cp images/3-git-trees.bin "$out"
-          cp images/4-git-commits.bin "$out"
-          cp images/5-git-index.bin "$out"
-          cp images/6-git-tags.bin "$out"
-          cp images/7-git-branches.bin "$out"
-          cp images/8-git-annotated-tags.bin "$out"
+          zstd -19 images/1-git-init.bin -o "$out/1-git-init.bin.zst"
+          zstd -19 images/2-git-blobs.bin -o "$out/2-git-blobs.bin.zst"
+          zstd -19 images/3-git-trees.bin -o "$out/3-git-trees.bin.zst"
+          zstd -19 images/4-git-commits.bin -o "$out/4-git-commits.bin.zst"
+          zstd -19 images/5-git-index.bin -o "$out/5-git-index.bin.zst"
+          zstd -19 images/6-git-tags.bin -o "$out/6-git-tags.bin.zst"
+          zstd -19 images/7-git-branches.bin -o "$out/7-git-branches.bin.zst"
+          zstd -19 images/8-git-annotated-tags.bin -o "$out/8-git-annotated-tags.bin.zst"
         '';
       };
     }

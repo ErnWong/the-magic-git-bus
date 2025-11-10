@@ -5,7 +5,7 @@ import buildState from "./state-builder.js";
 const METHOD = '9p'; // '9p' | 'inotify'
 
 buildState({
-    initialState: "0-login.bin",
+    initialState: "0-login.bin.zst",
     script: async function*({ delay, run, save })
     {
         await delay(4000);
