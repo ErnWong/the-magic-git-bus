@@ -17,7 +17,8 @@ export default {
     initrd: { url: toV86Url(new URL("initrd.zst", IMAGES_DIR)) },
     cmdline: [
         "rw",
-        "root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose",
+        // Don't set cache=loose - we want git file updates visible ASAP for viz purposes.
+        "root=host9p rootfstype=9p rootflags=trans=virtio",
         "console=ttyS0"
     ].join(" "),
     uart1: true, // For guest-host communications about git state
