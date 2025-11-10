@@ -10,23 +10,28 @@
     # Avoid rebuilding everything for 32-bit by using older version where nixos still
     # supported and cached the i686 builds.
     nixpkgs-i686.url = "github:NixOS/nixpkgs/23.05";
-    nixos-generators = {
+    nixos-generators-i686 = {
       url = "github:nix-community/nixos-generators/1.8.0";
       inputs.nixpkgs.follows = "nixpkgs-i686";
+    };
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
     fsex300 = {
       url = "github:thearchitect/fsex-webfont";
       flake = false;
     };
   };
-  outputs = { self, nixpkgs, utils, v86, nixos-generators, nixpkgs-i686, fsex300 }:
+  outputs = { self, nixpkgs, utils, v86, nixos-generators, nixpkgs-i686, fsex300, nixos-generators-i686 }:
     utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
           inherit system;
         };
         vmImage = import ./vm/vm-image.nix {
-          inherit nixpkgs nixpkgs-i686 nixos-generators;
+          inherit nixpkgs nixpkgs-i686;
+          nixos-generators = nixos-generators-i686;
         };
         vmFs = import ./vm/vm-fs.nix {
           inherit system pkgs v86 vmImage;
@@ -36,6 +41,9 @@
         };
         server = import ./server/default.nix {
           inherit system pkgs nixpkgs v86 vmImage vmFs vmStates fsex300;
+        };
+        deploy = import ./deploy.nix {
+          inherit system nixpkgs nixos-generators server;
         };
       in
       {
@@ -51,6 +59,8 @@
           vm-states-git = vmStates.gitStates;
 
           server = server;
+
+          digital-ocean-image = deploy;
         };
         defaultPackage = server;
       }
