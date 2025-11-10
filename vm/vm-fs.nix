@@ -9,7 +9,7 @@
       unpackPhase = ":";
       buildPhase = ''
         mkdir -p "$out/fs"
-        copy-to-sha256.py "${vmImage}/tarball/nixos-system-i686-linux.tar.xz" "$out/fs"
+        copy-to-sha256.py "${vmImage.tar}/tarball/nixos-system-i686-linux.tar.xz" "$out/fs"
       '';
     };
     rootfsJson = pkgs.stdenv.mkDerivation {
@@ -20,7 +20,7 @@
       unpackPhase = ":";
       buildPhase = ''
         mkdir -p "$out"
-        fs2json.py --out "$out/fs.json" "${vmImage}/tarball/nixos-system-i686-linux.tar.xz"
+        fs2json.py --out "$out/fs.json" "${vmImage.tar}/tarball/nixos-system-i686-linux.tar.xz"
       '';
     };
     rootfsExtracted = pkgs.stdenv.mkDerivation {
@@ -30,12 +30,14 @@
       ];
       unpackPhase = ''
         mkdir extracted
-        tar -xf "${vmImage}/tarball/nixos-system-i686-linux.tar.xz" -C ./extracted
+        tar -xf "${vmImage.tar}/tarball/nixos-system-i686-linux.tar.xz" -C ./extracted
       '';
       buildPhase = ''
         mkdir -p "$out/fs"
         copy-to-sha256.py ./extracted "$out/fs"
       '';
+      # Don't fixup as it's for a vm and not for our current system.
+      fixupPhase = ":";
     };
     rootfsJsonExtracted = pkgs.stdenv.mkDerivation {
       name = "the-magic-git-bus-rootfs";
@@ -44,12 +46,14 @@
       ];
       unpackPhase = ''
         mkdir extracted
-        tar -xf "${vmImage}/tarball/nixos-system-i686-linux.tar.xz" -C ./extracted
+        tar -xf "${vmImage.tar}/tarball/nixos-system-i686-linux.tar.xz" -C ./extracted
       '';
       buildPhase = ''
         mkdir -p "$out"
         fs2json.py --out "$out/fs.json" ./extracted
       '';
+      # Don't fixup as it's for a vm and not for our current system.
+      fixupPhase = ":";
     };
   in
     {

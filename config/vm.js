@@ -13,8 +13,8 @@ export default {
         basefs: toV86Url(new URL("fs.json", ROOT)),
     },
     //bzimage_initrd_from_filesystem: true,
-    bzimage: { url: toV86Url(new URL("./vm/vmlinuz-linux.img", ROOT)) },
-    initrd: { url: toV86Url(new URL("./vm/initramfs-linux.img", ROOT)) },
+    bzimage: { url: toV86Url(new URL("bzImage", IMAGES_DIR)) },
+    initrd: { url: toV86Url(new URL("initrd.zst", IMAGES_DIR)) },
     cmdline: [
         "rw",
         "root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose",

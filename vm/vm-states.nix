@@ -1,4 +1,4 @@
-{ system, pkgs, nixpkgs, v86, vmFs }:
+{ system, pkgs, nixpkgs, v86, vmFs, vmImage }:
   let
     libv86 = v86.packages.${system}.libv86;
     bios = v86.packages.${system}.seabios;
@@ -14,8 +14,6 @@
           fileset = nixpkgs.lib.fileset.unions [
             ./build-state-0-login.js
             ./state-builder.js
-            ./vmlinuz-linux.img
-            ./initramfs-linux.img
             ../config
           ];
         };
@@ -28,6 +26,8 @@
           mkdir -p images
           ln -s "${vmFs.rootfs}/fs" ./fs
           ln -s "${vmFs.rootfsJson}/fs.json" ./fs.json
+          ln -s "${vmImage.kernel}/bzImage" images/bzImage
+          ln -s "${vmImage.initrd}/initrd.zst" images/initrd.zst
           ./vm/build-state-0-login.js
         '';
         installPhase = ''
@@ -58,6 +58,8 @@
           ln -s "${vmFs.rootfs}" ./fs
           ln -s "${vmFs.rootfsJson}/fs.json" ./fs.json
           ln -s ${loggedInState}/0-login.bin ./images
+          ln -s "${vmImage.kernel}/bzImage" images/bzImage
+          ln -s "${vmImage.initrd}/initrd.zst" images/initrd.zst
           ./vm/build-state-1-git.js
         '';
         installPhase = ''

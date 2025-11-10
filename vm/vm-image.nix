@@ -2,12 +2,15 @@
   let
     pkgs-i686 = nixpkgs-i686.legacyPackages.i686-linux;
     method = "9p"; # "9p" | "inotify"
-    generate = extra: nixos-generators.nixosGenerate {
+    generate = format: nixos-generators.nixosGenerate {
       pkgs = nixpkgs-i686.legacyPackages.i686-linux;
       modules = [
-        ({ lib, modulesPath, config, ... }: {
+        ({ lib, modulesPath, pkgs, config,... }: {
             system.stateVersion = "23.05";
-            imports = [ "${modulesPath}/profiles/minimal.nix" ];
+            imports = [
+              "${modulesPath}/profiles/minimal.nix"
+              #"${modulesPath}/images/file-options.nix"
+            ];
 
             # Always use serial port
             boot.kernelParams = [ "console=ttyS0,115200n8" ];
@@ -15,6 +18,22 @@
             boot.loader.systemd-boot.enable = lib.mkForce false;
             formatAttr = "tarball";
             fileExtension = ".tar.xz";
+            boot.kernelPatches = [ {
+              name = "enable-9p-virtio";
+              patch = null;
+              # I thought these were already on by default, but apparently not as vfs would fail to mount
+              # 9p root fs otherwise.
+              extraConfig = ''
+                NET_9P y
+                NET_9P_VIRTIO y
+                NET_9P_DEBUG y
+                VIRTIO y
+                VIRTIO_PCI y
+                9P_FS y
+                9P_FS_POSIX_ACL y
+              '';
+                #9P_FSCACHE y
+            } ];
             boot.initrd.availableKernelModules = [
               "virtio_pci"
               "9p"
@@ -83,6 +102,31 @@
             #     default = "/run/wrappers/bin";
             #   };
             # };
+            system.build.tarball = pkgs.callPackage "${nixpkgs-i686}/nixos/lib/make-system-tarball.nix" {
+              extraArgs = "--owner=0";
+
+              storeContents = [
+                {
+                  object = config.system.build.toplevel;
+                  symlink = "none";
+                }
+              ];
+
+              contents = [
+                {
+                  source = config.system.build.toplevel + "/init";
+                  target = "/sbin/init";
+                }
+                ## Technically this is not required for lxc, but having also make this configuration work with systemd-nspawn.
+                ## Nixos will setup the same symlink after start.
+                #{
+                #  source = config.system.build.toplevel + "/etc/os-release";
+                #  target = "/etc/os-release";
+                #}
+              ];
+
+              #extraCommands = "mkdir -p proc sys dev";
+            };
 
             environment.systemPackages = [
               #(pkgs-i686.vim-full.customize {
@@ -201,31 +245,54 @@
             programs = {
               git.enable = true;
             };
-        } // (extra config))
+        } )#// (extra config))
       ];
       # Currently failing to generate a hard drive raw image:
       #format = "raw"; # can't open fsimg nixos.raw: Value too large for defined data type
       # Not quite applicable but similar: https://github.com/NixOS/nixpkgs/pull/82718
       # So instead we generate a live iso which seems to work.
       #format = "iso";
-      format = "lxc";
+      #format = "lxc";
+      inherit format;
 
+      customFormats.tar = {
+        #imports = ["${toString nixpkgs-i686}/nixos/modules/virtualisation/lxc-container.nix"];
+        formatAttr = nixpkgs-i686.lib.mkForce "tarball";
+        fileExtension = ".tar.xz";
+      };
+      # customFormats.kernel = {config, modulesPath, ...}: {
+      #   imports = ["${toString modulesPath}/virtualisation/lxc-container.nix"];
+      customFormats.kernel = {
+        #imports = ["${toString nixpkgs-i686}/nixos/modules/virtualisation/lxc-container.nix"];
+        formatAttr = nixpkgs-i686.lib.mkForce "kernel";
+        fileExtension = ".bin";
+      };
+      # customFormats.initrd = {config, modulesPath, ...}: {
+      #   imports = ["${toString modulesPath}/virtualisation/lxc-container.nix"];
+      customFormats.initrd = {
+        #imports = ["${toString nixpkgs-i686}/nixos/modules/virtualisation/lxc-container.nix"];
+        formatAttr = nixpkgs-i686.lib.mkForce "initialRamdisk";
+        fileExtension = ".bin";
+      };
     };
   in
     {
-      tar = generate (config: {});
-      kernel = generate (config: {
-        image.extension = "bin";
-        image.fileName = "bzimage.bin";
-        #image.filePath = "kernel/${config.image.fileName}";
-        image.filePath = "kernel/bzimage.bin";
-        system.build.image = config.system.build.kernel;
-      });
-      initrd = generate (config: {
-        image.extension = "bin";
-        image.fileName = "initrd";
-        #image.filePath = "initrd/${config.image.fileName}";
-        image.filePath = "initrd/initrd.bin";
-        system.build.image = config.system.build.initialRamdisk;
-      });
+      tar = generate "tar";
+      kernel = generate "kernel";
+      initrd = generate "initrd";
+      #tar = generate (config: {});
+      #kernel = generate (config: {
+      #  image.extension = "bin";
+      #  image.fileName = "bzimage.bin";
+      #  #image.filePath = "kernel/${config.image.fileName}";
+      #  image.filePath = "kernel/bzimage.bin";
+      #  system.build.image = config.system.build.kernel;
+      #});
+      #initrd = generate (config: {
+      #  image.extension = "bin";
+      #  image.fileName = "initrd";
+      #  #image.filePath = "initrd/${config.image.fileName}";
+      #  image.filePath = "initrd/initrd.bin";
+      #  system.build.image = config.system.build.initialRamdisk;
+      #});
     }
