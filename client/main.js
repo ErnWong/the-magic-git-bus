@@ -12,11 +12,19 @@ const emulator = new V86({
 });
 window.emulator = emulator;
 
-emulator.add_listener("emulator-started", () => {
+const fontLoaded = document.fonts.load(`16px 'Fixedsys Excelsior 3.01'`);
+
+const emulatorStarted = new Promise(resolve => {
+    emulator.add_listener("emulator-started", () => {
+        resolve();
+        emulator.serial0_send('clear\n');
+    });
+});
+
+Promise.allSettled([fontLoaded, emulatorStarted]).then(() => {
     // Why isn't setOption defined?
     emulator.serial_adapter.term._publicOptions.fontFamily = '"Fixedsys Excelsior 3.01"';
     emulator.serial_adapter.term._publicOptions.fontSize = 16;
-    emulator.serial0_send('clear\n');
 });
 
 const states = [
