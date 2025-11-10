@@ -1,4 +1,4 @@
-FROM nixos/nix AS builder
+FROM nixpkgs/nix-flakes AS builder
 COPY . /app
 WORKDIR /app
 RUN nix build .#
