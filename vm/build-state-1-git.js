@@ -10,10 +10,6 @@ buildState({
     {
         await delay(4000);
         yield* run("mkdir ~/repo");
-        if(METHOD === '9p')
-        {
-            yield* run("mount -t 9p -o trans=virtio,version=9p2000.L host9p ~/repo");
-        }
         yield* run("cd repo && git init");
         yield* run("git config --global user.name 'Charles Montgomery Plantagenet Schicklgruber Burns'");
         yield* run("git config --global user.email 'mr@burns.invalid'");
