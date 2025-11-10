@@ -457,7 +457,6 @@
         <script src="https://cdn.jsdelivr.net/npm/prismjs@1.30.0/plugins/normalize-whitespace/prism-normalize-whitespace.min.js"></script>
         <script type="module">
             import rr from "railroad-diagrams";
-            Object.assign(window, rr);
 
             Prism.plugins.NormalizeWhitespace.setDefaults({
                 "remove-trailing": true,
@@ -467,7 +466,8 @@
             });
 
             for (const railroad of document.getElementsByClassName('railroad-src')) {
-                railroad.after(eval(railroad.textContent).toSVG());
+                const script = Function('rr', `"use strict"; const { Terminal, NonTerminal, Diagram, OneOrMore, ZeroOrMore, Sequence, Stack } = rr; return ${railroad.textContent};`);
+                railroad.after(script(rr).toSVG());
                 railroad.classList.add('railroad-generated');
             }
         </script>
