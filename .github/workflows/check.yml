@@ -1,7 +1,8 @@
 name: Check
 on:
-  check_suite:
-    types: [completed]
+  push:
+#  check_suite:
+#    types: [completed]
 
 jobs:
   check:
