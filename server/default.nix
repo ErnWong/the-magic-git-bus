@@ -4,7 +4,8 @@
     bios = v86.packages.${system}.seabios;
   in
     pkgs.stdenv.mkDerivation {
-      name = "the-magic-git-bus";
+      pname = "the-magic-git-bus";
+      version = "0.0.0";
       nativeBuildInputs = [
         pkgs.makeWrapper
         pkgs.zstd
