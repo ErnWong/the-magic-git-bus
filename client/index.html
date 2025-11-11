@@ -122,20 +122,20 @@
                                             </pre>
                                         </li>
                                         <li>
-                                            <h1>Compress blob.</h1>
+                                            <h1>Hash the blob object</h1>
+                                            <pre><code class="language-bash">
+                                                cat myblob | shasum
+                                                # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad  -
+                                            </code></pre>
+                                        </li>
+                                        <li>
+                                            <h1>Compress blob</h1>
                                             <pre><code class="language-bash">
                                                 pigz --keep --zlib myblob
                                             </code></pre>
                                         </li>
                                         <li>
-                                            <h1>Hash the compressed blob</h1>
-                                            <pre><code class="language-bash">
-                                                cat myblob.zz | shasum
-                                                # 3b18e512dba79e4c8300dd08aeb37f8e728b8dad  -
-                                            </code></pre>
-                                        </li>
-                                        <li>
-                                            <h1>Chuck it into the database</h1>
+                                            <h1>Chuck blob into the database</h1>
                                             <pre><code class="language-bash">
                                                 mkdir .git/objects/3b
                                                 mv myblob.zz .git/objects/3b/18e512dba79e4c8300dd08aeb37f8e728b8dad
