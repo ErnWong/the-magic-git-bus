@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Meow+Script&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Rubik+Dirt&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Meow+Script&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Rubik+Dirt&display=swap'); */
+/* @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Meow+Script&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Puritan:ital,wght@0,400;0,700;1,400;1,700&family=Rubik+Dirt&display=swap'); */
+/* @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Libertinus+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Meow+Script&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Puritan:ital,wght@0,400;0,700;1,400;1,700&family=Rubik+Dirt&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&family=Instrument+Serif:ital@0;1&family=Libertinus+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Meow+Script&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Puritan:ital,wght@0,400;0,700;1,400;1,700&family=Rubik+Dirt&display=swap');
 
 @font-face {                  
 font-family: '0xProto';
@@ -8,20 +11,316 @@ font-weight: normal;
 font-style: normal;
 }
 
-html, body{
+html, body, #loading, #start {
     width: 100%;
     height: 100%;
+    margin: 0;
 }
 
 body {
-    display: flex;
-    flex-direction: column;
+    overflow: hidden;
+    box-sizing: content-box;
 }
 
-.title {
+#loading {
+    background-color: #0492ed;
+    position: relative;
+    height: 200vh;
+    margin-top: 0;
+    overflow: hidden;
+}
+
+#loading .floating {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    animation-name: bobbing, wobbling;
+    animation-duration: 4s, 2.3s;
+    animation-iteration-count: infinite, infinite;
+    animation-direction: alternate, alternate;
+    animation-timing-function: ease-in-out, ease-in-out;
+    pointer-events: none;
+}
+
+@keyframes bobbing {
+    from {
+        translate: 0 0;
+    }
+    to {
+        translate: 0 12px;
+    }
+}
+
+@keyframes wobbling {
+    from {
+        rotate: -0.3deg;
+    }
+    to {
+        rotate: 0.3deg;
+    }
+}
+
+#duck-quote-float, #duck-quote-git, #duck-quote-fun {
+    font-family: 'Comic Relief';
+    color: white;
+}
+
+#duck-1 {
+    position: absolute;
+    width: 90px;
+    top: calc(50vh - 26px);
+    left: calc(50vw - 241px);
+}
+
+#duck-quote-float {
+    position: absolute;
+    width: 150px;
+    top: calc(50vh - 192px);
+    left: calc(50vw - 165px);
+}
+
+#duck-2 {
+    position: absolute;
+    width: 90px;
+    top: calc(50vh - 26px);
+    left: calc(50vw - 138px);
+}
+
+#duck-quote-fun {
+    position: absolute;
+    width: 90px;
+    top: calc(50vh - 123px);
+    left: calc(50vw - 53px);
+}
+
+#duck-3 {
+    position: absolute;
+    width: 90px;
+    top: calc(50vh - 26px);
+    left: calc(50vw + -28px);
+}
+
+#duck-quote-git {
+    position: absolute;
+    width: 230px;
+    top: calc(50vh - 153px);
+    left: calc(50vw + 110px);
+}
+
+#duck-1-line, #duck-2-line, #duck-3-line {
+    stroke: white;
+    position: absolute;
+    stroke-width: 2px;
+}
+#duck-1-line {
+    top: calc(50vh - 123px);
+    left: calc(50vw - 170px);
+}
+#duck-2-line {
+    top: calc(50vh - 78px);
+    left: calc(50vw - 65px);
+}
+#duck-3-line {
+    top: calc(50vh - 81px);
+    left: calc(50vw + 52px);
+}
+
+#loading #the-bus {
+    position: absolute;
+    top: calc(50vh - 60px);
+    left: calc(50vw - 250px);
+}
+
+#loading #land-left {
+    position: absolute;
+    top: calc(50vh - 30px);
+    left: -260px;
+}
+
+#loading #land-right {
+    position: absolute;
+    top: calc(50vh - 30px);
+    right: -150px;
+}
+
+#loading:not(:has(#start-checkbox:checked)) :where(#duck-quote-fun, #duck-2-line) {
+    display: none;
+}
+
+#loading #water {
+    position: absolute;
+    top: calc(50vh + 150px);
+    left: calc(50vw - 500px);
+}
+
+#loading::before {
+    content: '';
+    background-color: #13b9ce;
+    top: 50vh;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: absolute;
+}
+
+#loading .deep-waters {
+    content: '';
+    background: linear-gradient(to bottom in oklch, #13b9ce, 70%, blue);
+    top: calc(50vh + 160px);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+#loading:has(#start-checkbox:checked) {
+    transition: 6s margin-top ease-in;
+    margin-top: -200vh;
+}
+#loading:has(#start-checkbox:checked) .floating {
+    transition: 6s margin-top ease-in;
+    margin-top: 200vh;
+}
+
+#start-checkbox:checked,
+#start-checkbox:checked + label {
+    display: none;
+}
+
+#loading.started {
+    transition: 0s margin-top linear !important;
+    margin-top: -200vh !important;
+}
+
+#loading .title {
+    font-family: "Meow Script", cursive;
+    text-align: center;
+    margin-top: 0;
+    padding-top: 100px;
+    color: white;
+    font-size: 100px;
+}
+
+#loading-progress {
+    position: absolute;
+    top: calc(100vh - 200px);
+    left: calc(50vw - 200px);
+    width: 400px;
+    height: 30px;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* --progress: attr(data-progress, 0%); */
+    --loaded: attr(data-loaded, '0');
+    --total: attr(data-total, '?');
+}
+
+/* #loading-progress::before { */
+#loading-bg {
+    position: absolute;
+    /* width: var(--progress); */
+    left: 0;
+    top: 0;
+    bottom: 0;
+    content: '';
+    background-color: white;
+}
+
+#loading-positive {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    /* width: calc(100% - var(--progress)); */
+    /* width: 100%; */
+    overflow: hidden;
+}
+#loading-negative {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    /* width: 100%; */
+    /* width: var(--progress); */
+    overflow: hidden;
+}
+
+#loading-positive::after {
+    content: 'Loading... ' var(--loaded) ' / ' var(--total) ' bytes';
+    color: white;
+    font-family: 'Comic Relief';
+    width: 400px;
+    height: 100%;
+    position: absolute;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#loading-negative::after {
+    content: 'Loading... ' var(--loaded) ' / ' var(--total) ' bytes';
+    color: black;
+    font-family: 'Comic Relief';
+    width: 400px;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#loading-progress[data-done="true"] {
+    display: none;
+}
+
+#loading input {
+    visibility: hidden;
+}
+
+#loading label {
+    display: none;
+    color: #000000;
+    font-size: 60px;
+    position: absolute;
+    top: calc(100vh - 200px);
+    text-align: center;
+    width: 100%;
+}
+
+#loading:has(#loading-progress[data-done="true"]) label {
+    display: block;
+}
+
+#loading label:hover {
+    color: #ffbe00;
+    cursor: pointer;
+}
+
+#start {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffbe00;
+    padding: 10px 60px 60px;
+    box-sizing: content-box;
+    margin-left: -30px;
+    width: calc(100% - 60px);
+    height: calc(100% - 60px);
+    box-shadow: inset -6px -5px 3px 4px rgb(0 81 112 / 64%), inset -5px -4px 14px 10px rgb(223 223 223 / 57%), inset 0px -1px 4px 6px rgb(255 246 185 / 81%);
+    overflow: hidden;
+}
+
+#start .title {
     flex-grow: 0;
     font-family: "Meow Script", cursive;
     text-align: center;
+    color: #ffbe00;
+    text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.5);
+    margin: 0.2em 0 0.8em;
 }
 
 .upper {
@@ -30,70 +329,166 @@ body {
     flex-direction: row;
     flex-basis: 50%;
     min-height: 0;
+    gap: 20px;
 }
 
-#graph {
+#graph-window {
     flex-grow: 1;
     flex-basis: 50%;
     height: 50%;
-    overflow: scroll;
     min-height: 0;
+    position: relative;
+    overflow: hidden;
+    border-top-left-radius: 60px;
+    border-top-right-radius: 60px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+
+    box-shadow: -6px -5px 3px 4px rgb(0 81 112 / 64%), -5px -4px 5px 11px rgb(80 62 0 / 31%), 0px -1px 0px 7px rgb(94 255 210 / 51%);
+
+    margin-bottom: 60px;
+}
+
+#graph-window::after{
+    box-shadow: 2px 2px 5px 6px inset #00000075;
+    border-top-left-radius: 60px;
+    border-top-right-radius: 60px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+#graph-container {
     display: flex;
     align-items: center;
-    justify-content: center;
     background-color: blue;
+    overflow: auto;
+    scrollbar-width: thin;
+    width: 100%;
+    height: 100%;
+}
+
+#graph {
+    margin: 0 auto;
 }
 
 main {
+    overflow: auto;
+    height: 100%;
+    scrollbar-width: thin;
+    position: relative;
+}
+
+.main-window {
     width: 50%;
-    overflow: scroll;
+    margin-left: -40px;
+    margin-bottom: -50px;
+    position: relative;
+    flex-grow: 1;
+    min-width: 0;
+    flex-basis: 70%;
 }
 
 #vm-area {
     width: 50%;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
+    flex-grow: 1;
+    min-width: 670px;
+    flex-basis: 30%;
+
+    box-shadow: -6px -5px 3px 4px rgb(112 87 0 / 64%), -5px -4px 5px 11px rgb(80 62 0 / 31%), 0px -1px 0px 7px rgb(255 238 94 / 51%), 3px 3px 3px 0px inset #000000a1, -3px -3px 5px 0px inset #00000045;
+    border-radius: 20px;
+    margin: 20px;
+    margin-right: -20px;
+    padding: 20px;
+    background-color: #d9cfb4;
 }
 
 #vm {
-    display: inline-block;
-    border-radius: 4px;
+    /* display: inline-block; */
+    border-radius: 10px;
+    box-shadow: -2px -2px 2px 1px #0000007a, 1px 2px 2px 2px #ffffff7a;
     background-color: black;
-    padding: 1.5em;
+    padding: 0.5em;
 
     /* Hardcode size so it gets the right size before it has any content */
-    min-width: 688px;
-    min-height: 432px;
+    /* min-width: 688px;
+    min-height: 432px; */
+    min-height: 0;
+    flex-grow: 1;
+
+    overflow: hidden;
+}
+
+#vm-time-machine-label {
+    text-align: center;
+    font-weight: normal;
+    margin: 10px 0 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5em;
+    font-size: 0.8em;
+    padding: 0.2em 0;
+    background-color: #585858;
+    color: white;
+    text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.5);
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    box-shadow: -2px -2px 2px 0px inset #00000059, 2px 2px 0px 0px inset #ffffffb8, 0 0 10px inset black;
+    font-family: "Instrument Serif", serif;
 }
 
 #vm-button-tray {
     display: flex;
+    background-color: #131313;
+    padding: 0 0 4px;
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
+    gap: 1px;
+    flex-wrap: wrap;
 }
 
 #vm-button-tray input {
     width: 0;
+    margin: 0;
 }
 #vm-button-tray label {
+    border-radius: 6px;
     flex-basis: 100%;
     text-transform: uppercase;
-    margin-top: 0;
+    margin-top: -4px;
     margin-bottom: 4px;
+    background-color: grey;
+    color: white;
+    font-family: "Puritan", sans-serif;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    text-align: center;
+    padding: 0.3em 0.4em;
+    box-shadow: 0 6px 0 #303030, 1px 1px 2px 0px inset white, -1px -1px 10px 0px inset #000000;
+    text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.4);
+    height: 30px;
+    flex-basis: 0;
+    flex-grow: 1;
 }
 #vm-button-tray input + label:hover,
-#vm-button-tray input:focus + label {
+#vm-button-tray input:checked + label:hover {
+    background-color: rgb(188, 188, 188);
 }
-#vm-button-tray input:checked + label,
+#vm-button-tray input:checked + label {
+    margin-top: -2px;
+    margin-bottom: 2px;
+    box-shadow: 0 4px 0 #303030, 1px 1px 2px 0px inset white, -1px -1px 10px 0px inset #000000;
+    background-color: rgb(159, 159, 159);
+}
 #vm-button-tray input + label:active {
-    margin-top: 4px;
+    margin-top: 0;
     margin-bottom: 0;
-}
-#vm-button-tray input:checked + label:hover,
-#vm-button-tray input:checked + label:focus,
-#vm-button-tray input:active + label:hover,
-#vm-button-tray input:focus + label {
-
+    box-shadow: 0 2px 0 #303030, 1px 1px 2px 0px inset white, -1px -1px 10px 0px inset #000000;
 }
 
 #vm .xterm-viewport {
@@ -104,12 +499,12 @@ main {
     shape-rendering: crispEdges;
 }
 
-#vm, #graph {
+#vm, #graph-window {
     position: relative;
     filter: sepia(0.3);
 }
 
-#vm::after, #graph::after {
+#vm::after, #graph-window::after {
     content: '';
     position: absolute;
     top: 0;
@@ -121,21 +516,104 @@ main {
     background-size: 100% 2px, 3px 100%;
 }
 
+main > h1 {
+    text-align: center;
+    font-size: 3em;
+    border-top: 4px solid black;
+    border-bottom: 4px solid black;
+    margin: 100px 100px 200px;
+}
+
 h1 {
     font-family: "Rubik Dirt", sans-serif;
     font-weight: normal;
+    margin-top: 100px;
 }
 
 html {
     font-family: "Old Standard TT", serif;
     font-family: "Instrument Serif", serif;
+    font-family: "Libertinus Serif", serif;
 }
 
 main code[class*="language-"], main pre[class*="language-"], code, pre {
     font-family: "0xproto", monospace;
-    font-size: 0.7em;
+    font-size: 0.9em;
+}
+
+main div.code-toolbar>.toolbar {
+    opacity: 1;
+    position: static;
+}
+
+main div.code-toolbar>.toolbar>.toolbar-item>button {
+    border-radius: 0;
+    padding: 0.5em 1em;
+    font-family: 'Puritan';
+    text-transform: uppercase;
+    font-size: 11px;
+    box-shadow: none;
+    border: 1px solid #6e6e6e;
+    color: #555;
+    width: 70px;
+}
+
+main .copy-to-clipboard-button[data-copy-state="copy-success"] {
+    border-color: #00921a;
+    color: #00921a;
+}
+
+main .copy-to-clipboard-button[data-copy-state="copy-error"] {
+    border-color: red;
+    color: red;
 }
 
 .railroad-generated {
     display: none;
 }
+
+section {
+    position: relative;
+    padding: 2em;
+    /* border-radius: 4px; */
+    margin-top: 100px;
+    margin-bottom: 100px;
+}
+
+.main-window::before, section::before {
+    background-color: #ffffff;
+    box-shadow: 3px 2px 13px rgb(0 0 0 / 58%);
+    content: '';
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: absolute;
+    filter: url(#wavy2); /*https://stackoverflow.com/questions/14585101/old-paper-background-texture-with-just-css*/
+}
+
+.main-window::before {
+    margin-top: -20px;
+}
+
+section::before {
+    margin: -2em;
+}
+
+section section {
+    margin-left: -1em;
+    margin-right: -2em;
+}
+
+section > * {
+    position: relative;
+}
+
+li {
+    margin: 80px 0;
+}
+
+li::marker {
+    font-family: "Rubik Dirt", sans-serif;
+    font-size: 1.5em;
+}
+

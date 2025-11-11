@@ -21,10 +21,25 @@ const emulatorStarted = new Promise(resolve => {
     });
 });
 
+const fitAddon = new (FitAddon.FitAddon)();
+
 Promise.allSettled([fontLoaded, emulatorStarted]).then(() => {
     // Why isn't setOption defined?
     emulator.serial_adapter.term._publicOptions.fontFamily = '"Fixedsys Excelsior 3.01"';
     emulator.serial_adapter.term._publicOptions.fontSize = 16;
+    emulator.serial_adapter.term.loadAddon(fitAddon);
+
+    setInterval(() => fitAddon.fit(), 300);
+});
+
+let emulatorBytesLoaded = 0;
+let emulatorBytesTotal = 0;
+
+emulator.add_listener("download-progress", function(e)
+{
+    emulatorBytesLoaded = e.loaded;
+    emulatorBytesTotal = e.total;
+    updateProgress();
 });
 
 const states = [
@@ -32,48 +47,64 @@ const states = [
         name: '1-git-init',
         text: 'init',
         downloading: true,
+        bytesLoaded: 0,
+        bytesTotal: 0,
         postLoadCommand: 'clear\n',
     },
     {
         name: '2-git-blobs',
         text: 'blob',
         downloading: true,
+        bytesLoaded: 0,
+        bytesTotal: 0,
         postLoadCommand: 'clear\n',
     },
     {
         name: '3-git-trees',
         text: 'tree',
         downloading: true,
+        bytesLoaded: 0,
+        bytesTotal: 0,
         postLoadCommand: 'clear\n',
     },
     {
         name: '4-git-commits',
         text: 'commit',
         downloading: true,
+        bytesLoaded: 0,
+        bytesTotal: 0,
         postLoadCommand: 'clear\n',
     },
     {
         name: '5-git-index',
         text: 'index',
         downloading: true,
+        bytesLoaded: 0,
+        bytesTotal: 0,
         postLoadCommand: 'clear\n',
     },
     {
         name: '6-git-tags',
         text: 'tag',
         downloading: true,
+        bytesLoaded: 0,
+        bytesTotal: 0,
         postLoadCommand: 'clear\n',
     },
     {
         name: '7-git-branches',
         text: 'branch',
         downloading: true,
+        bytesLoaded: 0,
+        bytesTotal: 0,
         postLoadCommand: 'clear\n',
     },
     {
         name: '8-git-annotated-tags',
         text: 'annotated tag',
         downloading: true,
+        bytesLoaded: 0,
+        bytesTotal: 0,
         postLoadCommand: 'clear\n',
     },
 ];
@@ -98,7 +129,20 @@ for(const state of states)
     });
     button.disabled = true;
     (async () => {
-        const buffer = await (await fetch(new URL(`${state.name}.bin.zst`, IMAGES_DIR))).arrayBuffer();
+        const http = new XMLHttpRequest();
+        http.open('get', new URL(`${state.name}.bin.zst`, IMAGES_DIR), true);
+        http.responseType = 'arraybuffer';
+        const httpPromise = new Promise((resolve, reject) => {
+            http.onload = () => resolve(http.response);
+            http.onerror = event => reject(event);
+        });
+        http.onprogress = event => {
+            state.bytesLoaded = event.loaded;
+            state.bytesTotal = event.total;
+            updateProgress();
+        };
+        http.send(null);
+        const buffer = await httpPromise;
         button.addEventListener('click', async () => {
             restoring_state = true;
             update();
@@ -112,6 +156,21 @@ for(const state of states)
     })();
     document.getElementById("vm-button-tray").appendChild(radio);
     document.getElementById("vm-button-tray").appendChild(button);
+}
+
+function updateProgress() {
+    const bytesLoaded = emulatorBytesLoaded + states.map(x => x.bytesLoaded).reduce((a, b) => a + b, 0);
+    const bytesTotal = emulatorBytesTotal + states.map(x => x.bytesTotal).reduce((a, b) => a + b, 0);
+    const done = emulatorStarted && states.every(x => !x.downloading);
+    const percent = (bytesLoaded / bytesTotal * 100).toFixed(1) + '%';
+    const inversePercent = (100 - bytesLoaded / bytesTotal * 100).toFixed(1) + '%';
+    document.getElementById('loading-progress').dataset.loaded = bytesLoaded;
+    document.getElementById('loading-progress').dataset.total = bytesTotal;
+    // document.getElementById('loading-progress').dataset.progress = ((bytesLoaded / bytesTotal) * 100).toFixed(0) + '%';
+    document.getElementById('loading-progress').dataset.done = done ? "true" : "false";
+    document.getElementById('loading-bg').style.width = percent;
+    document.getElementById('loading-positive').style.width = inversePercent;
+    document.getElementById('loading-negative').style.width = percent;
 }
 
 if(METHOD === 'inotify')
@@ -225,6 +284,8 @@ if(METHOD === '9p')
 
         setInterval(async () =>
         {
+            if(!emulator?.fs9p?.SearchPath) return; // Not ready yet.
+
             const cache = {};
             const dir = 'root/repo';
             const oids = await Array.fromAsync(git.listAllObjects({ fs, cache, dir }));

@@ -725,6 +725,8 @@ export default async function visualize(objects, elk, refs, indexEntries)
         ...refs.map(x => pathToCss(x.ref)),
         ...indexEntries.map(x => `index-${pathToCss(x.path)}`),
     ];
+    document.getElementById('graph').style.width = graphWithLayout.width;
+    document.getElementById('graph').style.height = graphWithLayout.height;
     document.getElementById('graph').innerHTML = `
         <style>
             ${things.map(thing => `
