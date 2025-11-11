@@ -532,6 +532,179 @@
                                 </section>
                             </section>
                         </section>
+                        <section>
+                            <h1>Merges</h1>
+                            <section>
+                                <h1>3-way merge</h1>
+                                <ol>
+                                    <li>
+                                        <h1>Simulate a conflict</h1>
+                                        <p>Say you gave someone a file yesterday, and since then both of you made changes:</p>
+                                        <pre><code class="language-bash">
+                                            echo "a
+
+                                            b
+
+                                            c" > yesterday.txt
+                                            echo "a1
+
+                                            b1
+
+                                            c" > today-yours.txt
+                                            echo "a
+
+                                            b2
+
+                                            c2" > today-theirs.txt
+                                        </code></pre>
+                                    </li>
+                                    <li>
+                                        <h1>Try two-way diff</h1>
+                                        <pre><code class="language-bash">
+                                            diff today-yours.txt today-theirs.txt
+                                            # 1c1
+                                            # < a1
+                                            # ---
+                                            # > a
+                                            # 3c3
+                                            # < b1
+                                            # ---
+                                            # > b2
+                                            # 5c5
+                                            # < c
+                                            # ---
+                                            # > c2
+                                        </code></pre>
+                                        <p>But there's not enough context. a1 and c2 are independent and should not conflict.</p>
+                                    </li>
+                                    <li>
+                                        <h1>Try three-way diff</h1>
+                                        <pre><code class="language-bash">
+                                            diff3 --merge today-yours.txt yesterday.txt today-theirs.txt
+                                            # a1
+                                            # 
+                                            # <<<<<<< today-yours.txt
+                                            # b1
+                                            # ||||||| yesterday.txt
+                                            # b
+                                            # =======
+                                            # b2
+                                            # >>>>>>> today-theirs.txt
+                                            # 
+                                            # c2
+                                        </code></pre>
+                                    </li>
+                                    <li>
+                                        <h1>Diff/merge with git</h1>
+                                        <pre><code class="language-bash">
+                                            git merge-file --stdout today-yours.txt yesterday.txt today-theirs.txt
+                                            # a1
+                                            # 
+                                            # <<<<<<< today-yours.txt
+                                            # b1
+                                            # =======
+                                            # b2
+                                            # >>>>>>> today-theirs.txt
+                                            # 
+                                            # c2
+                                        </code></pre>
+                                        <p>But that's for a single file. What about a tree?</p>
+                                    </li>
+                                    <li>
+                                        <h1>Merge a tree</h1>
+                                        <pre><code class="language-bash">
+                                            git checkout -b branch1
+                                            echo Content from branch 1 > branch1.txt
+                                            echo Conflict from branch 1 > conflict.txt
+                                            git add branch1.txt conflict.txt
+                                            git commit -m "Commit 1"
+
+                                            git checkout -
+
+                                            git checkout -b branch2
+                                            echo Content from branch 2 > branch2.txt
+                                            echo Conflict from branch 2 > conflict.txt
+                                            git add branch2.txt conflict.txt
+                                            git commit -m "Commit 2"
+
+                                            git checkout -
+
+                                            git merge-tree --write-tree --merge-base=master branch1 branch2
+                                        </code></pre>
+                                    </li>
+                                </ol>
+                            </section>
+                            <section>
+                                <h1>Merge Base</h1>
+                                <p>Figuring out where we last agreed.</p>
+                                <pre><code class="language-bash">
+                                    git merge-base --all branch1 branch2
+                                </code></pre>
+                            </section>
+                            <section>
+                                <h1>Recursive Merge</h1>
+                                <p>When there are multiple merge bases.</p>
+                                <ol>
+                                    <li>
+                                        <h1>Create a criss-cross merge</h1>
+                                        <pre><code class="language-bash">
+                                            git checkout branch1
+                                            git merge branch2
+                                            git add conflict.txt
+                                            git commit -m "Merge branch 2 into 1"
+
+                                            git checkout branch2
+                                            git merge branch1
+                                            git add conflict.txt
+                                            git commit -m "Merge branch 1 into 2"
+                                        </code></pre>
+                                    </li>
+                                    <li>
+                                        <h1>Look at merge bases</h1>
+                                        <pre><code class="language-bash">
+                                            git merge-base --all branch1 branch2
+                                        </code></pre>
+                                    </li>
+                                    <li>
+                                        <h1>Recursive merges to the rescue</h1>
+                                        <p>Keep recursively merging the merge bases until we arrive back to a single merge base.</p>
+                                    </li>
+                                </ol>
+                            </section>
+                            <section>
+                                <h1>Ort algorithm</h1>
+                                <p>Ostensibly Recursive's Twin</p>
+                                <p>Also pun: <code class="language-bash">git merge -s ort</code></p>
+                            </section>
+                        </section>
+                        <section>
+                            <h1>Sequencer</h1>
+                            <p>The infrastructure around rebases, cherry-picks, reverts, squashes, etc.</p>
+                            <ol>
+                                <li>
+                                    <h1>Cherry-pick using a merge</h1>
+                                    <pre><code class="language-bash">
+                                        git merge-tree --merge-base=destination^ source destination
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Revert using a merge</h1>
+                                    <pre><code class="language-bash">
+                                        git merge-tree --merge-base=destination source destination^
+                                    </code></pre>
+                                </li>
+                                <li>
+                                    <h1>Squashing using commit-tree</h1>
+                                    <pre><code class="language-bash">
+                                        git commit-tree -p START_COMMIT^ $(git rev-parse END_COMMIT:/)
+                                    </code></pre>
+                                </li>
+                            </ol>
+                        </section>
+                        <section>
+                            <h1>Bad Merges</h1>
+                            <p><a href="https://devblogs.microsoft.com/oldnewthing/20180312-00/?p=98215">https://devblogs.microsoft.com/oldnewthing/20180312-00/?p=98215</a></p>
+                        </section>
                     </main>
                 </div>
                 <div id="vm-area">
