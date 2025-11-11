@@ -14,9 +14,12 @@ window.emulator = emulator;
 
 const fontLoaded = document.fonts.load(`16px 'Fixedsys Excelsior 3.01'`);
 
+let emulatorHasStarted = false;
 const emulatorStarted = new Promise(resolve => {
     emulator.add_listener("emulator-started", () => {
+        emulatorHasStarted = true;
         resolve();
+        updateProgress();
         emulator.serial0_send('clear\n');
     });
 });
@@ -37,8 +40,8 @@ let emulatorBytesTotal = 0;
 
 emulator.add_listener("download-progress", function(e)
 {
-    emulatorBytesLoaded = e.loaded;
-    emulatorBytesTotal = e.total;
+    emulatorBytesLoaded = e.loaded ?? emulatorBytesLoaded;
+    emulatorBytesTotal = e.total ?? emulatorBytesTotal;
     updateProgress();
 });
 
@@ -137,8 +140,8 @@ for(const state of states)
             http.onerror = event => reject(event);
         });
         http.onprogress = event => {
-            state.bytesLoaded = event.loaded;
-            state.bytesTotal = event.total;
+            state.bytesLoaded = event.loaded ?? state.bytesLoaded;
+            state.bytesTotal = event.total ?? state.bytesTotal;
             updateProgress();
         };
         http.send(null);
@@ -161,7 +164,7 @@ for(const state of states)
 function updateProgress() {
     const bytesLoaded = emulatorBytesLoaded + states.map(x => x.bytesLoaded).reduce((a, b) => a + b, 0);
     const bytesTotal = emulatorBytesTotal + states.map(x => x.bytesTotal).reduce((a, b) => a + b, 0);
-    const done = emulatorStarted && states.every(x => !x.downloading);
+    const done = emulatorHasStarted && states.every(x => !x.downloading);
     const percent = (bytesLoaded / bytesTotal * 100).toFixed(1) + '%';
     const inversePercent = (100 - bytesLoaded / bytesTotal * 100).toFixed(1) + '%';
     document.getElementById('loading-progress').dataset.loaded = bytesLoaded;
@@ -284,6 +287,7 @@ if(METHOD === '9p')
 
         setInterval(async () =>
         {
+            updateProgress();
             if(!emulator?.fs9p?.SearchPath) return; // Not ready yet.
 
             const cache = {};
