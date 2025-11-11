@@ -206,7 +206,7 @@ body {
 
 #loading-progress {
     position: absolute;
-    top: calc(100vh - 200px);
+    top: calc(100vh - 250px);
     left: calc(50vw - 200px);
     width: 400px;
     height: 30px;
@@ -283,17 +283,12 @@ body {
 }
 
 #loading label {
-    display: none;
     color: #000000;
     font-size: 60px;
     position: absolute;
     top: calc(100vh - 200px);
     text-align: center;
     width: 100%;
-}
-
-#loading:has(#loading-progress[data-done="true"]) label {
-    display: block;
 }
 
 #loading label:hover {
