@@ -162,6 +162,10 @@
                                             </code></pre>
                                         </li>
                                     </ol>
+                                    <section>
+                                        <h1>Git Plumbing and Git Porcelain</h1>
+                                        <img style="width: 400px" src="porcelain-plumbing.svg"/>
+                                    </section>
                                 </section>
                                 <section>
                                     <h1>Tree</h1>
@@ -365,6 +369,17 @@
                                             </code></pre>
                                         </li>
                                     </ol>
+                                </section>
+                                <section>
+                                    <h1>The Immutability Iceberg</h1>
+                                    <pre><code class="language-markup">
+                                        Level 1: Immutable. E.g. const.
+                                        Level 2: Value Semantics. E.g. int literals, JS strings.
+                                        Level 3: Persistent Data Structure. E.g. Elm, React redux.
+                                        Level 4: Copy-on-write. E.g. Linux processes.
+                                        Level 5: Content Addressed (CAS). E.g. Git LFS, v86.
+                                        Level 6: Merkle Trees. E.g. git, nix, blockchains, ZFS, IPFS.
+                                    </code></pre>
                                 </section>
                             </section>
                             <section>
