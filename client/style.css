@@ -296,6 +296,19 @@ body {
     cursor: pointer;
 }
 
+.loading-github {
+    color: white;
+    font-family: 'Comic Relief';
+    text-decoration: none;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+}
+
+.loading-github:hover {
+    text-decoration: underline;
+}
+
 #start {
     display: flex;
     flex-direction: column;
@@ -316,6 +329,22 @@ body {
     color: #ffbe00;
     text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.5);
     margin: 0.2em 0 0.8em;
+    position: relative;
+}
+
+.title-github {
+    position: absolute;
+    right: 75px;
+    color: #ffeaae;
+    text-decoration: none;
+    font-size: 15px;
+    font-family: 'Puritan';
+    text-transform: uppercase;
+    top: 13px;
+}
+
+.title-github:hover {
+    text-decoration: underline;
 }
 
 .upper {
